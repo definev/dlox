@@ -1,11 +1,16 @@
 import 'package:dlox/token_type.dart';
 
 class Token {
-  const Token(this.type, this.lexeme, this.literal, this.line);
-  
+  const Token({
+    required this.type,
+    required this.lexeme,
+    required this.literal,
+    required this.line,
+  });
+
   final TokenType type;
   final String lexeme;
-  final Object literal;
+  final Object? literal;
   final int line;
 
   @override

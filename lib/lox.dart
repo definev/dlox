@@ -4,9 +4,9 @@ import 'package:dlox/scanner.dart';
 import 'package:dlox/token.dart';
 
 class Lox {
-  bool hadError = false;
+  static bool hadError = false;
 
-  void main(List<String> args) {
+  static void main(List<String> args) {
     if (args.length > 1) {
       stdout.writeln('[Dlox] Wrong path specify.'.codeUnits);
       exit(64);
@@ -17,7 +17,7 @@ class Lox {
     }
   }
 
-  void run(String source) {
+  static void run(String source) {
     Scanner scanner = Scanner(source);
     List<Token> tokens = scanner.scanTokens();
 
@@ -26,16 +26,16 @@ class Lox {
     }
   }
 
-  void error(int line, String message) {
+  static void error(int line, String message) {
     _report(line, '', message);
   }
 
-  void _report(int line, String where, String message) {
+  static void _report(int line, String where, String message) {
     stdout.writeln('[line: $line] Error: $where: $message');
     hadError = true;
   }
 
-  void runFile(String path) {
+  static void runFile(String path) {
     File file = File(path);
     if (file.existsSync()) {
       run(file.readAsStringSync());
@@ -43,7 +43,7 @@ class Lox {
     }
   }
 
-  void runPrompt() {
+  static void runPrompt() {
     while (true) {
       String? line = stdin.readLineSync();
       stdout.write('> ');
