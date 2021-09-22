@@ -112,9 +112,27 @@ class Scanner {
       case '\n':
         _line++;
         break;
+      case '"':
+        _string();
+        break;
       default:
         Lox.error(_line, 'Unexpected character.');
         break;
     }
+  }
+
+  void _string() {
+    while (_peek() != '"' && !_isAtEnd) {
+      if (_peek() == '\n') _line++;
+      _advance();
+    }
+
+    if (_isAtEnd) {
+      Lox.error(_line, 'Unterminated string.F');
+      return;
+    }
+
+    String value = _source.substring(_start + 1, _current - 1);
+    _addToken(TokenType.string, value);
   }
 }
