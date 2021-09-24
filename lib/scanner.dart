@@ -6,6 +6,25 @@ class Scanner {
   final String _source;
   final List<Token> _tokens = [];
 
+  static const Map<String, TokenType> _keywords = {
+    'and': TokenType.kAnd,
+    'class': TokenType.kClass,
+    'else': TokenType.kElse,
+    'false': TokenType.kFalse,
+    'for': TokenType.kFor,
+    'fun': TokenType.kFun,
+    'if': TokenType.kIf,
+    'nil': TokenType.kNil,
+    'or': TokenType.kOr,
+    'print': TokenType.kPrint,
+    'return': TokenType.kReturn,
+    'super': TokenType.kSuper,
+    'this': TokenType.kThis,
+    'true': TokenType.kTrue,
+    'var': TokenType.kVar,
+    'while': TokenType.kWhile,
+  };
+
   int _start = 0;
   int _current = 0;
   int _line = 1;
@@ -14,10 +33,7 @@ class Scanner {
 
   bool get _isAtEnd => _current >= _source.length;
 
-  String _advance() {
-    _current++;
-    return _source[_current - 1];
-  }
+  String _advance() => _source[_current++];
 
   void addToken(TokenType type) {
     _addToken(type, null);
@@ -39,6 +55,15 @@ class Scanner {
     if (_isAtEnd) return '\x00';
     return _source[_current];
   }
+
+  String _peekNext() {
+    if (_source.length >= _current + 1) return '\x00';
+    return _source[_current + 1];
+  }
+
+  bool _isAlpha(String char) => RegExp(r'[a-z _][A-Z]').hasMatch(char);
+
+  bool _isAlphaNumeric(String char) => _isAlpha(char) || _isDigit(char);
 
   List<Token> scanTokens() {
     while (!_isAtEnd) {
@@ -101,6 +126,10 @@ class Scanner {
           while (_peek() != '\n' && !_isAtEnd) {
             _advance();
           }
+        } else if (_match('*')) {
+          while ((!_isAtEnd) && (_peek() != '*' && _peekNext() != '/')) {
+            _advance();
+          }
         } else {
           addToken(TokenType.slash);
         }
@@ -116,9 +145,26 @@ class Scanner {
         _string();
         break;
       default:
-        Lox.error(_line, 'Unexpected character.');
+        if (_isDigit(c)) {
+          _number();
+        } else if (_isAlpha(c)) {
+          _identifier();
+        } else {
+          Lox.error(_line, 'Unexpected character.');
+        }
         break;
     }
+  }
+
+  void _identifier() {
+    while (_isAlphaNumeric(_peek())) {
+      _advance();
+    }
+
+    String text = _source.substring(_start, _current);
+    TokenType? type = _keywords[text];
+    type ??= TokenType.identifier;
+    addToken(type);
   }
 
   void _string() {
@@ -134,5 +180,23 @@ class Scanner {
 
     String value = _source.substring(_start + 1, _current - 1);
     _addToken(TokenType.string, value);
+  }
+
+  bool _isDigit(String char) => RegExp(r'[0-9]').hasMatch(char);
+
+  void _number() {
+    while (_isDigit(_peek())) {
+      _advance();
+    }
+
+    if (_peek() == '.' && _isDigit(_peekNext())) {
+      _advance();
+
+      while (_isDigit(_peek())) {
+        _advance();
+      }
+    }
+
+    _addToken(TokenType.number, double.parse(_source.substring(_start, _current)));
   }
 }
