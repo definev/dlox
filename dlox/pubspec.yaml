@@ -5,12 +5,16 @@ version: 1.0.0
 environment:
   sdk: '>=2.14.0 <3.0.0'
 
+publish_to: none
+
 # dependencies:
 #   path: ^1.8.0
 dev_dependencies:
   lints: ^1.0.0
-  dlox_generator:
+  dlox_generators:
     path: ../dlox_generators/
+  build_runner:
 dependencies:
-
+  dlox_annotations:
+    path: ../dlox_annotations/
   
