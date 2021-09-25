@@ -1,0 +1,6 @@
+name: dlox_annotations
+description: An interpreters for Dlox languages.
+version: 1.0.0
+
+environment:
+  sdk: '>=2.14.0 <3.0.0'
