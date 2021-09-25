@@ -1,8 +1,8 @@
-class ExprAnnotation {
-  final List<String> struction;
+class Expr {
+  final List<String> fields;
 
-  const ExprAnnotation(this.struction);
+  const Expr(this.fields);
 }
 
 
-const defaultExprAnnotation = ExprAnnotation([]);
+const defaultExprAnnotation = Expr([]);

@@ -1,0 +1,15 @@
+targets:
+  $default:
+    builders:
+      generators|annotations:
+        enabled: true
+
+builders:
+  generators:
+    target: ":dlox_generators"
+    import: "package:dlox_generators/builder.dart"
+    builder_factories: ["generateExpr"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen|combining_builder"]  
