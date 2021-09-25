@@ -3,7 +3,7 @@ import 'package:build/build.dart';
 import 'package:dlox_annotations/dlox_annotations.dart';
 import 'package:source_gen/source_gen.dart';
 
-class ExprGenerator extends GeneratorForAnnotation<Expr> {
+class AspGenerator extends GeneratorForAnnotation<Ast> {
   @override
   String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
     final baseClassName = element.displayName.substring(1);

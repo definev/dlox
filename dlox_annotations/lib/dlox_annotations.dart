@@ -1,3 +1,3 @@
 library dlox_annotation;
 
-export 'src/expr_annotation.dart';
+export 'src/ast_annotation.dart';
