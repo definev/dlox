@@ -1,9 +1,9 @@
 import 'package:dlox/token.dart';
-import 'package:dlox_annotations/dlox_annotations.dart' as ant;
+import 'package:dlox_annotations/dlox_annotations.dart';
 
-part 'expr.g.dart';
+part 'ast.g.dart';
 
-@ant.Expr([
+@Ast([
   // "className" : "fields"
   "Binary   : Expr left, Token operator, Expr right",
   "Grouping : Expr expression",

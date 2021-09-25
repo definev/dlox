@@ -1,9 +1,9 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'expr.dart';
+part of 'ast.dart';
 
 // **************************************************************************
-// ExprGenerator
+// AspGenerator
 // **************************************************************************
 
 abstract class Expr {
