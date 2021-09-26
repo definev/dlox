@@ -3,7 +3,7 @@
 part of 'ast.dart';
 
 // **************************************************************************
-// AspGenerator
+// AstGenerator
 // **************************************************************************
 
 abstract class Expr {
@@ -17,6 +17,8 @@ abstract class Visitor<R> {
   R visitUnaryExpr(Unary expr);
 }
 
+// Câu lệnh có hai vế
+// Ví dụ: "a = b", "a == b", ...
 class Binary extends Expr {
   Binary(
     this.left,
@@ -34,6 +36,7 @@ class Binary extends Expr {
   }
 }
 
+// Câu lệnh trong dấu ngoặc "{}" "()"
 class Grouping extends Expr {
   Grouping(
     this.expression,
@@ -47,12 +50,13 @@ class Grouping extends Expr {
   }
 }
 
+// Giá trị numbers, strings, Booleans, and nil.
 class Literal extends Expr {
   Literal(
     this.value,
   );
 
-  final Object value;
+  final Object? value;
 
   @override
   R accept<R>(Visitor<R> visitor) {
@@ -60,6 +64,8 @@ class Literal extends Expr {
   }
 }
 
+// Toán tử một ngôi
+// Ví dụ: ++, --, !, ...
 class Unary extends Expr {
   Unary(
     this.operator,

@@ -1,7 +1,12 @@
 import 'dart:io';
 
+import 'package:dlox/ast/ast.dart';
+import 'package:dlox/ast/ast_printer.dart';
+import 'package:dlox/ast/rpn_printer.dart';
 import 'package:dlox/scanner.dart';
 import 'package:dlox/token.dart';
+
+import 'token_type.dart';
 
 class Lox {
   static bool hadError = false;
@@ -55,16 +60,23 @@ class Lox {
 }
 
 void main() {
-  String? path = stdin.readLineSync();
+  Expr expression = Binary(
+    Grouping(
+      Binary(
+        Literal(1),
+        Token(type: TokenType.plus, lexeme: '+', literal: null, line: 1),
+        Literal(2),
+      ),
+    ),
+    Token(type: TokenType.star, lexeme: '*', literal: null, line: 1),
+    Grouping(
+      Binary(
+        Literal(4),
+        Token(type: TokenType.minus, lexeme: '-', literal: null, line: 1),
+        Literal(3),
+      ),
+    ),
+  );
 
-  if (path != null) {
-    File file = File(path);
-    bool exist = file.existsSync();
-    print("File exist: $exist");
-    if (exist) {
-      String content = file.readAsStringSync();
-      // Printing the name
-      print("Content: $content");
-    }
-  }
+  print(RpnPrinter().print(expression));
 }
