@@ -3,4 +3,4 @@ import 'package:source_gen/source_gen.dart';
 
 import 'src/ast_generator.dart';
 
-Builder generateExpr(BuilderOptions options) => SharedPartBuilder([AspGenerator()], 'expr_generator');
+Builder generateExpr(BuilderOptions options) => SharedPartBuilder([AstGenerator()], 'ast_generator');
