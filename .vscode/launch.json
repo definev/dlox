@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "dlox",
+            "cwd": "dlox",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "dlox_annotations",
+            "cwd": "dlox_annotations",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "dlox_generators",
+            "cwd": "dlox_generators",
+            "request": "launch",
+            "type": "dart"
+        }
+    ]
+}

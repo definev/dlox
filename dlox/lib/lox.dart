@@ -78,5 +78,6 @@ void main() {
     ),
   );
 
+  print(AstPrinter().print(expression));
   print(RpnPrinter().print(expression));
 }

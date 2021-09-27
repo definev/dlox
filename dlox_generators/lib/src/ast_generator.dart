@@ -3,6 +3,13 @@ import 'package:build/build.dart';
 import 'package:dlox_annotations/dlox_annotations.dart';
 import 'package:source_gen/source_gen.dart';
 
+Map<String, String> instructions = {
+  'Binary': '// Câu lệnh có hai vế \n// Ví dụ: "a = b", "a == b", ...',
+  'Grouping': '// Câu lệnh trong dấu ngoặc "{}" "()"',
+  'Literal': '// Giá trị numbers, strings, Booleans, and nil.',
+  'Unary': '// Toán tử một ngôi\n// Ví dụ: ++, --, !, ...',
+};
+
 class AstGenerator extends GeneratorForAnnotation<Ast> {
   @override
   String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
@@ -33,6 +40,7 @@ class AstGenerator extends GeneratorForAnnotation<Ast> {
 }
 
 void generateSubClass(StringBuffer classBuffer, String baseClassName, String className, String fields) {
+  classBuffer.writeln(instructions[className]);
   classBuffer.writeln('class $className extends $baseClassName {');
 
   classBuffer.writeln('$className(');
