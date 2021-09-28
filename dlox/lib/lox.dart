@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dlox/ast/ast.dart';
 import 'package:dlox/ast/ast_printer.dart';
 import 'package:dlox/ast/rpn_printer.dart';
+import 'package:dlox/parser.dart';
 import 'package:dlox/scanner.dart';
 import 'package:dlox/token.dart';
 
@@ -26,8 +27,19 @@ class Lox {
     Scanner scanner = Scanner(source);
     List<Token> tokens = scanner.scanTokens();
 
-    for (final token in tokens) {
-      stdout.writeln(token);
+    Parser parser = Parser(tokens);
+    Expr? expression = parser.tryParse();
+
+    if (hadError) return;
+
+    print(AstPrinter().print(expression!));
+  }
+
+  static void parserError(Token token, String message) {
+    if (token.type == TokenType.eof) {
+      _report(token.line, 'at end', message);
+    } else {
+      _report(token.line, 'at "${token.lexeme}"', message);
     }
   }
 
