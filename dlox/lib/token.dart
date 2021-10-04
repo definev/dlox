@@ -1,7 +1,55 @@
 import 'package:dlox/token_type.dart';
+import 'package:dlox_annotations/dlox_annotations.dart';
 
+part 'token.g.dart';
+
+@TokenAnnotation(tokenMap: {
+  "{": "leftParen",
+  "}": "rightParen",
+  "(": "leftBrace",
+  ")": "rightBrace",
+  ",": "comma",
+  ".": "dot",
+  "-": "minus",
+  "+": "plus",
+  ";": "semicolon",
+  "/": "slash",
+  "*": "star",
+  "?": "question",
+  ":": "colon",
+  "!": "bang",
+  "!=": "bangEqual",
+  "=": "equal",
+  "==": "equalEqual",
+  ">": "greater",
+  ">=": "greaterEqual",
+  "<": "less",
+  "<=": "lessEqual",
+  "eof": "eof",
+}, identifiers: [
+  "identifier",
+  "string",
+  "number"
+], keywords: [
+  "kAnd",
+  "kClass",
+  "kElse",
+  "kFalse",
+  "kFun",
+  "kFor",
+  "kIf",
+  "kNil",
+  "kOr",
+  "kPrint",
+  "kReturn",
+  "kSuper",
+  "kThis",
+  "kTrue",
+  "kVar",
+  "kWhile",
+])
 class Token {
-  const Token({
+  Token({
     required this.type,
     required this.lexeme,
     required this.literal,
@@ -15,4 +63,8 @@ class Token {
 
   @override
   String toString() => '$lexeme + $literal + $line';
+}
+
+text() {
+  Token;
 }

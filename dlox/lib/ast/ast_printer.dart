@@ -24,6 +24,11 @@ class AstPrinter implements Visitor<String> {
     return parenthesize(expr.operator.lexeme, [expr.right]);
   }
 
+  @override
+  String visitConditionalExpr(Conditional expr) {
+    return parenthesize('conditional', [expr.condition, expr.thenBranch, expr.elseBranch]);
+  }
+
   String parenthesize(String name, List<Expr> exprs) {
     StringBuffer exprsBuffer = StringBuffer();
 

@@ -15,6 +15,7 @@ abstract class Visitor<R> {
   R visitGroupingExpr(Grouping expr);
   R visitLiteralExpr(Literal expr);
   R visitUnaryExpr(Unary expr);
+  R visitConditionalExpr(Conditional expr);
 }
 
 // Câu lệnh có hai vế
@@ -65,7 +66,7 @@ class Literal extends Expr {
 }
 
 // Toán tử một ngôi
-// Ví dụ: ++, --, !, ...
+// Ví dụ: +, -, !, ...
 class Unary extends Expr {
   Unary(
     this.operator,
@@ -78,5 +79,24 @@ class Unary extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitUnaryExpr(this);
+  }
+}
+
+// Toán tử điều kiện
+// Ví dụ: if (condition) ... else ...; condition ? ... : ...; ...
+class Conditional extends Expr {
+  Conditional(
+    this.condition,
+    this.thenBranch,
+    this.elseBranch,
+  );
+
+  final Expr condition;
+  final Expr thenBranch;
+  final Expr elseBranch;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitConditionalExpr(this);
   }
 }

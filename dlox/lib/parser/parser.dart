@@ -5,16 +5,49 @@ import 'package:dlox/token_type.dart';
 
 /// Grammar rules:
 /// ```
+/// // Biểu thức
 /// expression     → equality
+/// comma          → equality ("," equality)?
+/// // Đẳng thức
 /// equality       → comparison ( ( "!=" | "==" ) comparison )*
+/// // So sách
 /// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+/// // Phép cộng trừ
 /// term           → factor ( ( "-" | "+" ) factor )*
+/// // Phép nhân chia
 /// factor         → unary ( ( "/" | "*" ) unary )*
+/// // Toán tử một ngôi
 /// unary          → ( "!" | "-" ) unary
 ///                | primary
 /// primary        → NUMBER | STRING | "true" | "false" | "nil"
 ///                | "(" expression ")"
 ///```
+///
+/// Parser của Lox sẽ tiếp cận theo hướng từ trên xuống dưới.
+/// Đệ quy đến lúc parse hết các tokens (Từ khóa) → exprs (Câu lệnh).
+///
+/// <b>Challenge 1 (Chapter 6):</b>
+/// - Toán tử dấu ",".
+///   - Toán tử dấu "," để tách các expression.
+///   - Ex: "var a, b, c;", "foo(a, b, c) { ... }" ...
+///   - Thứ tự ưu tiên sau đẳng thức.
+///   - Cú pháp:
+///     ```
+///       expression → comma
+///       comma      → equality ("," equality)*
+///       equality   → ...
+///     ```
+/// - Postfix "++" "--".
+///   - Ex: a++, b++, c--, ...
+///   - Độ ưu tiên cao hơn toán tử một ngôi vì trách việc parser hiểu lầm toán tử một ngôi "-" với postfix "--".
+///   - Cú pháp:
+///     ```
+///       unary    → ...
+///       postfix  → ("++" | "--")? primary;
+///       primary  → ...
+///     ```
+/// - Prefix "++" "--".
+/// - Giúp tách các expression.
 class Parser {
   Parser(this._tokens);
   final List<Token> _tokens;
@@ -84,7 +117,33 @@ class Parser {
     }
   }
 
-  Expr _expression() => _equality();
+  Expr _comma() {
+    Expr expr = _equality();
+
+    while (_match([TokenType.comma])) {
+      Token token = _previous();
+      Expr right = _equality();
+      expr = Binary(expr, token, right);
+    }
+
+    return expr;
+  }
+
+  Expr _expression() => _conditional();
+
+  Expr _conditional() {
+    Expr expr = _equality();
+
+    if (_match([TokenType.question])) {
+      Expr thenBranch = _expression();
+      _consume(TokenType.colon, 'Expect ":" after then branch of conditional expression.');
+      Expr elseBranch = _expression();
+
+      expr = Conditional(expr, thenBranch, elseBranch);
+    }
+
+    return expr;
+  }
 
   Expr _equality() {
     Expr expr = _comparison();

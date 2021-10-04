@@ -13,6 +13,8 @@ enum TokenType {
   /* ; */ semicolon, 
   /* / */ slash,
   /* * */ star,
+  /* ? */ question,
+  /* : */ colon,
 
   /// Token so sánh
   /* ! != */ bang, bangEqual,

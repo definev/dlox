@@ -25,6 +25,11 @@ class RpnPrinter implements Visitor<String> {
     return _rpnPrint([expr.right], expr.operator);
   }
 
+  @override
+  String visitConditionalExpr(Conditional expr) {
+    return _rpnPrint([expr.condition, expr.thenBranch, expr.elseBranch]);
+  }
+
   String _rpnPrint(List<Expr> exprs, [Token? token]) {
     StringBuffer printBuffer = StringBuffer();
 

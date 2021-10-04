@@ -3,14 +3,19 @@ import 'dart:io';
 import 'package:dlox/ast/ast.dart';
 import 'package:dlox/ast/ast_printer.dart';
 import 'package:dlox/ast/rpn_printer.dart';
-import 'package:dlox/parser.dart';
-import 'package:dlox/scanner.dart';
+import 'package:dlox/interpreter/interpreter.dart';
+import 'package:dlox/parser/parser.dart';
+import 'package:dlox/interpreter/runtime_error.dart';
+import 'package:dlox/scanning/scanner.dart';
 import 'package:dlox/token.dart';
 
 import 'token_type.dart';
 
 class Lox {
+  static final Interpreter interpreter = Interpreter();
+
   static bool hadError = false;
+  static bool hadRuntimeError = false;
 
   static void main(List<String> args) {
     if (args.length > 1) {
@@ -43,13 +48,18 @@ class Lox {
     }
   }
 
+  static void _report(int line, String where, String message) {
+    stdout.writeln('[line: $line] Error: $where: $message');
+    hadError = true;
+  }
+
   static void error(int line, String message) {
     _report(line, '', message);
   }
 
-  static void _report(int line, String where, String message) {
-    stdout.writeln('[line: $line] Error: $where: $message');
-    hadError = true;
+  static void runtimeError(RuntimeError error) {
+    print(error.message + "\n[line ${error.token.line}]");
+    hadRuntimeError = true;
   }
 
   static void runFile(String path) {
@@ -57,6 +67,7 @@ class Lox {
     if (file.existsSync()) {
       run(file.readAsStringSync());
       if (hadError) exit(65);
+      if (hadRuntimeError) exit(70);
     }
   }
 
@@ -73,23 +84,10 @@ class Lox {
 
 void main() {
   Expr expression = Binary(
-    Grouping(
-      Binary(
-        Literal(1),
-        Token(type: TokenType.plus, lexeme: '+', literal: null, line: 1),
-        Literal(2),
-      ),
-    ),
-    Token(type: TokenType.star, lexeme: '*', literal: null, line: 1),
-    Grouping(
-      Binary(
-        Literal(4),
-        Token(type: TokenType.minus, lexeme: '-', literal: null, line: 1),
-        Literal(3),
-      ),
-    ),
+    Literal(4),
+    Token(lexeme: '>', line: 1, literal: null, type: TokenType.greater),
+    Literal(3),
   );
 
-  print(AstPrinter().print(expression));
-  print(RpnPrinter().print(expression));
+  Lox.interpreter.interpretier(expression);
 }

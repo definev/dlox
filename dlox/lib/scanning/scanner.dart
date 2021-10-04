@@ -134,6 +134,12 @@ class Scanner {
           addToken(TokenType.slash);
         }
         break;
+      case '?':
+        addToken(TokenType.question);
+        break;
+      case ':':
+        addToken(TokenType.colon);
+        break;
       case ' ':
       case '\r':
       case '\t':
@@ -174,7 +180,7 @@ class Scanner {
     }
 
     if (_isAtEnd) {
-      Lox.error(_line, 'Unterminated string.F');
+      Lox.error(_line, 'Unterminated string.');
       return;
     }
 
