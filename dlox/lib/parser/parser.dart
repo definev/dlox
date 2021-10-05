@@ -1,4 +1,5 @@
-import 'package:dlox/ast/ast.dart';
+import 'package:dlox/ast/expr.dart';
+import 'package:dlox/ast/stmt.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
@@ -48,10 +49,31 @@ import 'package:dlox/token_type.dart';
 ///     ```
 /// - Prefix "++" "--".
 /// - Giúp tách các expression.
+///
+/// Cú pháp của các câu lệnh (statements):
+/// ```
+/// program        → statement* EOF
+/// statement      → exprStmt
+///                | printStmt
+/// exprStmt       → expression ";"
+/// printStmt      → "print" expression ";"
+/// ```
 class Parser {
   Parser(this._tokens);
   final List<Token> _tokens;
   int _current = 0;
+
+  List<Stmt>? tryParse() {
+    List<Stmt> stmts = [];
+    try {
+      while (!_isAtEnd) {
+        stmts.add(_statement());
+      }
+      return stmts;
+    } on ParserError catch (_) {
+      return null;
+    }
+  }
 
   bool _match(List<TokenType> types) {
     for (final type in types) {
@@ -123,7 +145,7 @@ class Parser {
     while (_match([TokenType.comma])) {
       Token token = _previous();
       Expr right = _equality();
-      expr = Binary(expr, token, right);
+      expr = Expr.binary(expr, token, right);
     }
 
     return expr;
@@ -139,7 +161,7 @@ class Parser {
       _consume(TokenType.colon, 'Expect ":" after then branch of conditional expression.');
       Expr elseBranch = _expression();
 
-      expr = Conditional(expr, thenBranch, elseBranch);
+      expr = Expr.conditional(expr, thenBranch, elseBranch);
     }
 
     return expr;
@@ -151,7 +173,7 @@ class Parser {
     while (_match([TokenType.bangEqual, TokenType.equalEqual])) {
       Token operator = _previous();
       Expr right = _comparison();
-      expr = Binary(expr, operator, right);
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -164,7 +186,7 @@ class Parser {
       Token operator = _previous();
       Expr right = _term();
 
-      expr = Binary(expr, operator, right);
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -173,11 +195,11 @@ class Parser {
   Expr _term() {
     Expr expr = _factor();
 
-    while (_match([TokenType.slash, TokenType.minus])) {
+    while (_match([TokenType.plus, TokenType.minus])) {
       Token operator = _previous();
       Expr right = _factor();
 
-      expr = Binary(expr, operator, right);
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -186,11 +208,11 @@ class Parser {
   Expr _factor() {
     Expr expr = _unary();
 
-    while (_match([TokenType.slash, TokenType.minus])) {
+    while (_match([TokenType.slash, TokenType.star])) {
       Token operator = _previous();
       Expr right = _unary();
 
-      expr = Binary(expr, operator, right);
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -201,7 +223,7 @@ class Parser {
       Token operator = _previous();
       Expr right = _unary();
 
-      return Unary(operator, right);
+      return Expr.unary(operator, right);
     }
 
     return _primary();
@@ -220,18 +242,29 @@ class Parser {
 
       _consume(TokenType.rightBrace, 'Expect expression.');
 
-      return Grouping(expression);
+      return Expr.grouping(expression);
     }
 
     throw ParserError();
   }
 
-  Expr? tryParse() {
-    try {
-      return _expression();
-    } on ParserError catch (_) {
-      return null;
-    }
+  Stmt _statement() {
+    if (_match([TokenType.kPrint])) return _printStmt();
+    return _expressionStmt();
+  }
+
+  Stmt _printStmt() {
+    var expression = _expression();
+    _consume(TokenType.semicolon, 'Missing ; after value.');
+
+    return Stmt.printStmt(expression);
+  }
+
+  Stmt _expressionStmt() {
+    var expression = _expression();
+    _consume(TokenType.semicolon, 'Missing ; after expression.');
+
+    return Stmt.expressionStmt(expression);
   }
 }
 

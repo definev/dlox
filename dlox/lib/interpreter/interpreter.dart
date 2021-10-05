@@ -1,21 +1,27 @@
-import 'package:dlox/ast/ast.dart';
+import 'package:dlox/ast/expr.dart' as expr_ast;
+import 'package:dlox/ast/stmt.dart' as stmt_ast;
 import 'package:dlox/lox.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
-class Interpreter implements Visitor<dynamic> {
-  void interpretier(Expr expr) {
+class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
+  void interpret(List<stmt_ast.Stmt> statements) {
     try {
-      final value = _evaluate(expr);
-      print(_stringify(value));
-    } on RuntimeError catch (e) {
-      Lox.runtimeError(e);
+      for (stmt_ast.Stmt statement in statements) {
+        _execute(statement);
+      }
+    } on RuntimeError catch (error) {
+      Lox.runtimeError(error);
     }
   }
 
+  _execute(stmt_ast.Stmt statements) {
+    statements.accept(this);
+  }
+
   @override
-  visitBinaryExpr(Binary expr) {
+  visitBinaryExpr(expr_ast.Binary expr) {
     final left = _evaluate(expr.left);
     final right = _evaluate(expr.right);
 
@@ -52,12 +58,16 @@ class Interpreter implements Visitor<dynamic> {
         if (left is String && right is String) {
           return left + right;
         }
+        if (left is String && right is num || left is num && right is String) {
+          return '$left$right';
+        }
         throw RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
       case TokenType.star:
         _checkNumberOperants(expr.operator, [left, right]);
         return left * right;
       case TokenType.slash:
         _checkNumberOperants(expr.operator, [left, right]);
+        if (right == 0) throw RuntimeError(expr.operator, "Cannot divided by 0.");
         return left / right;
       default:
     }
@@ -66,7 +76,7 @@ class Interpreter implements Visitor<dynamic> {
   }
 
   @override
-  visitConditionalExpr(Conditional expr) {
+  visitConditionalExpr(expr_ast.Conditional expr) {
     final condition = _evaluate(expr.condition);
     _checkBool(condition);
     dynamic value;
@@ -80,17 +90,17 @@ class Interpreter implements Visitor<dynamic> {
   }
 
   @override
-  visitGroupingExpr(Grouping expr) {
-    _evaluate(expr.expression);
+  visitGroupingExpr(expr_ast.Grouping expr) {
+    return _evaluate(expr.expression);
   }
 
   @override
-  visitLiteralExpr(Literal expr) {
+  visitLiteralExpr(expr_ast.Literal expr) {
     return expr.value;
   }
 
   @override
-  visitUnaryExpr(Unary expr) {
+  visitUnaryExpr(expr_ast.Unary expr) {
     final right = _evaluate(expr.right);
 
     switch (expr.operator.type) {
@@ -111,7 +121,7 @@ class Interpreter implements Visitor<dynamic> {
     return true;
   }
 
-  _evaluate(Expr expr) {
+  _evaluate(expr_ast.Expr expr) {
     return expr.accept(this);
   }
 
@@ -153,5 +163,15 @@ class Interpreter implements Visitor<dynamic> {
     }
 
     return object.toString();
+  }
+
+  @override
+  void visitExpressionStmtStmt(stmt_ast.ExpressionStmt stmt) {
+    _evaluate(stmt.expression);
+  }
+
+  @override
+  void visitPrintStmtStmt(stmt_ast.PrintStmt stmt) {
+    print(_stringify(_evaluate(stmt.expression)));
   }
 }

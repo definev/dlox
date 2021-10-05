@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:dlox/ast/ast.dart';
-import 'package:dlox/ast/ast_printer.dart';
-import 'package:dlox/ast/rpn_printer.dart';
+import 'package:dlox/ast/stmt.dart';
 import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/parser/parser.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
@@ -33,32 +31,32 @@ class Lox {
     List<Token> tokens = scanner.scanTokens();
 
     Parser parser = Parser(tokens);
-    Expr? expression = parser.tryParse();
+    List<Stmt>? statements = parser.tryParse();
 
     if (hadError) return;
 
-    print(AstPrinter().print(expression!));
+    interpreter.interpret(statements!);
   }
 
   static void parserError(Token token, String message) {
     if (token.type == TokenType.eof) {
-      _report(token.line, 'at end', message);
+      _report(token.line, 'at end', message, "PARSER");
     } else {
-      _report(token.line, 'at "${token.lexeme}"', message);
+      _report(token.line, 'at "${token.lexeme}"', message, "PARSER");
     }
   }
 
-  static void _report(int line, String where, String message) {
-    stdout.writeln('[line: $line] Error: $where: $message');
+  static void _report(int line, String where, String message, String from) {
+    stdout.writeln('|$from| [line: $line] Error $where: $message');
     hadError = true;
   }
 
-  static void error(int line, String message) {
-    _report(line, '', message);
+  static void error(int line, String message, String from) {
+    _report(line, '', message, from);
   }
 
   static void runtimeError(RuntimeError error) {
-    print(error.message + "\n[line ${error.token.line}]");
+    _report(error.token.line, '', error.message, "RUNTIME");
     hadRuntimeError = true;
   }
 
@@ -83,11 +81,10 @@ class Lox {
 }
 
 void main() {
-  Expr expression = Binary(
-    Literal(4),
-    Token(lexeme: '>', line: 1, literal: null, type: TokenType.greater),
-    Literal(3),
-  );
+  String raw = '''print "one";
+print true;
+print ("24" + "21");  
+''';
 
-  Lox.interpreter.interpretier(expression);
+  Lox.run(raw);
 }

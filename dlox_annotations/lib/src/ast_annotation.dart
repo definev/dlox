@@ -3,6 +3,3 @@ class Ast {
 
   const Ast(this.fields);
 }
-
-
-const defaultAspAnnotation = Ast([]);

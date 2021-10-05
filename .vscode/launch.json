@@ -6,9 +6,10 @@
     "configurations": [
         {
             "name": "dlox",
-            "cwd": "dlox",
+            "cwd": "dlox/dlox",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "lib/lox.dart"
         },
         {
             "name": "dlox_annotations",

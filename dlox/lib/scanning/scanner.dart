@@ -33,7 +33,10 @@ class Scanner {
 
   bool get _isAtEnd => _current >= _source.length;
 
-  String _advance() => _source[_current++];
+  String _advance() {
+    _current++;
+    return _source[_current - 1];
+  }
 
   void addToken(TokenType type) {
     _addToken(type, null);
@@ -61,7 +64,7 @@ class Scanner {
     return _source[_current + 1];
   }
 
-  bool _isAlpha(String char) => RegExp(r'[a-z _][A-Z]').hasMatch(char);
+  bool _isAlpha(String char) => RegExp(r'[a-zA-Z_]').hasMatch(char);
 
   bool _isAlphaNumeric(String char) => _isAlpha(char) || _isDigit(char);
 
@@ -140,6 +143,7 @@ class Scanner {
       case ':':
         addToken(TokenType.colon);
         break;
+
       case ' ':
       case '\r':
       case '\t':
@@ -156,7 +160,7 @@ class Scanner {
         } else if (_isAlpha(c)) {
           _identifier();
         } else {
-          Lox.error(_line, 'Unexpected character.');
+          Lox.error(_line, 'Unexpected character.', "SCANNER");
         }
         break;
     }
@@ -178,12 +182,12 @@ class Scanner {
       if (_peek() == '\n') _line++;
       _advance();
     }
+    _advance();
 
     if (_isAtEnd) {
-      Lox.error(_line, 'Unterminated string.');
+      Lox.error(_line, 'Unterminated string.', "SCANNER");
       return;
     }
-
     String value = _source.substring(_start + 1, _current - 1);
     _addToken(TokenType.string, value);
   }

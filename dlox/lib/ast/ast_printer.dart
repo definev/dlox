@@ -1,4 +1,4 @@
-import 'package:dlox/ast/ast.dart';
+import 'package:dlox/ast/expr.dart';
 
 class AstPrinter implements Visitor<String> {
   String print(Expr expr) => expr.accept(this);

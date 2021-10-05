@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ast.dart';
+part of 'expr.dart';
 
 // **************************************************************************
 // AstGenerator
@@ -8,6 +8,27 @@ part of 'ast.dart';
 
 abstract class Expr {
   R accept<R>(Visitor<R> visitor);
+  static Expr binary(Expr left, Token operator, Expr right) => Binary(
+        left,
+        operator,
+        right,
+      );
+  static Expr grouping(Expr expression) => Grouping(
+        expression,
+      );
+  static Expr literal(Object? value) => Literal(
+        value,
+      );
+  static Expr unary(Token operator, Expr right) => Unary(
+        operator,
+        right,
+      );
+  static Expr conditional(Expr condition, Expr thenBranch, Expr elseBranch) =>
+      Conditional(
+        condition,
+        thenBranch,
+        elseBranch,
+      );
 }
 
 abstract class Visitor<R> {
