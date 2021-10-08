@@ -9,7 +9,10 @@ part 'expr.g.dart';
   "Grouping       : Expr expression",
   "Literal        : Object? value",
   "Unary          : Token operator, Expr right",
+  "Postfix        : Expr left, Token operator",
   "Conditional    : Expr condition, Expr thenBranch, Expr elseBranch",
+  "Variable       : Token token",
+  "Assignment     : Token name, Expr value",
 ])
 // ignore: unused_element
 class _Expr {}

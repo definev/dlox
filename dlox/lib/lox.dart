@@ -81,10 +81,12 @@ class Lox {
 }
 
 void main() {
-  String raw = '''print "one";
-print true;
-print ("24" + "21");  
-''';
+  String raw = '''
+var myName = "Definev_";
+print myName + " handsome!";
+
+myName = "That true!";
+print myName;''';
 
   Lox.run(raw);
 }

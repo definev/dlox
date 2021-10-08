@@ -62,9 +62,7 @@ class Token {
   final int line;
 
   @override
-  String toString() => '$lexeme + $literal + $line';
-}
-
-text() {
-  Token;
+  String toString() {
+    return 'Token(type: $type, lexeme: "$lexeme", literal: "$literal", line: $line)\n';
+  }
 }

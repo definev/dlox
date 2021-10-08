@@ -23,11 +23,22 @@ abstract class Expr {
         operator,
         right,
       );
+  static Expr postfix(Expr left, Token operator) => Postfix(
+        left,
+        operator,
+      );
   static Expr conditional(Expr condition, Expr thenBranch, Expr elseBranch) =>
       Conditional(
         condition,
         thenBranch,
         elseBranch,
+      );
+  static Expr variable(Token token) => Variable(
+        token,
+      );
+  static Expr assignment(Token name, Expr value) => Assignment(
+        name,
+        value,
       );
 }
 
@@ -36,7 +47,10 @@ abstract class Visitor<R> {
   R visitGroupingExpr(Grouping expr);
   R visitLiteralExpr(Literal expr);
   R visitUnaryExpr(Unary expr);
+  R visitPostfixExpr(Postfix expr);
   R visitConditionalExpr(Conditional expr);
+  R visitVariableExpr(Variable expr);
+  R visitAssignmentExpr(Assignment expr);
 }
 
 // Câu lệnh có hai vế
@@ -103,6 +117,22 @@ class Unary extends Expr {
   }
 }
 
+// no docs
+class Postfix extends Expr {
+  Postfix(
+    this.left,
+    this.operator,
+  );
+
+  final Expr left;
+  final Token operator;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitPostfixExpr(this);
+  }
+}
+
 // Toán tử điều kiện
 // Ví dụ: if (condition) ... else ...; condition ? ... : ...; ...
 class Conditional extends Expr {
@@ -119,5 +149,35 @@ class Conditional extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitConditionalExpr(this);
+  }
+}
+
+// no docs
+class Variable extends Expr {
+  Variable(
+    this.token,
+  );
+
+  final Token token;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitVariableExpr(this);
+  }
+}
+
+// no docs
+class Assignment extends Expr {
+  Assignment(
+    this.name,
+    this.value,
+  );
+
+  final Token name;
+  final Expr value;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitAssignmentExpr(this);
   }
 }

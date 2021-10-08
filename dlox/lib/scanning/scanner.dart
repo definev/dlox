@@ -101,10 +101,18 @@ class Scanner {
         addToken(TokenType.dot);
         break;
       case '-':
-        addToken(TokenType.minus);
+        if (_match('-')) {
+          addToken(TokenType.minusMinus);
+        } else {
+          addToken(TokenType.minus);
+        }
         break;
       case '+':
-        addToken(TokenType.plus);
+        if (_match('+')) {
+          addToken(TokenType.plusPlus);
+        } else {
+          addToken(TokenType.plus);
+        }
         break;
       case ';':
         addToken(TokenType.semicolon);

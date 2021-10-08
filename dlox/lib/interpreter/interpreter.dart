@@ -1,11 +1,14 @@
 import 'package:dlox/ast/expr.dart' as expr_ast;
 import 'package:dlox/ast/stmt.dart' as stmt_ast;
+import 'package:dlox/interpreter/environment.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
 class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
+  final Environment _environment = Environment();
+
   void interpret(List<stmt_ast.Stmt> statements) {
     try {
       for (stmt_ast.Stmt statement in statements) {
@@ -115,13 +118,37 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     return null;
   }
 
+  @override
+  visitPostfixExpr(expr_ast.Postfix expr) {
+    switch (expr.operator.type) {
+      case TokenType.plusPlus:
+        return expr.left.accept(this) + 1;
+      case TokenType.minusMinus:
+        return expr.left.accept(this) - 1;
+      default:
+        throw RuntimeError(expr.operator, 'use "${expr.operator.lexeme}" wrong type.');
+    }
+  }
+
+  @override
+  visitVariableExpr(expr_ast.Variable expr) {
+    return _environment.get(expr.token);
+  }
+
+  @override
+  visitAssignmentExpr(expr_ast.Assignment expr) {
+    _environment.define(expr.name, _evaluate(expr.value));
+    return _environment.get(expr.name);
+  }
+
   bool _isTruthy(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
     return true;
   }
 
-  _evaluate(expr_ast.Expr expr) {
+  _evaluate(expr_ast.Expr? expr) {
+    if (expr == null) return null;
     return expr.accept(this);
   }
 
@@ -173,5 +200,11 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   @override
   void visitPrintStmtStmt(stmt_ast.PrintStmt stmt) {
     print(_stringify(_evaluate(stmt.expression)));
+  }
+
+  @override
+  void visitVarStmtStmt(stmt_ast.VarStmt stmt) {
+    final value = _evaluate(stmt.initializer);
+    _environment.define(stmt.name, value);
   }
 }

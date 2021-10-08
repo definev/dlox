@@ -7,8 +7,11 @@ import 'package:dlox/token_type.dart';
 /// Grammar rules:
 /// ```
 /// // Biểu thức
-/// expression     → equality
-/// comma          → equality ("," equality)?
+/// expression     → comma
+/// // Chia biểu thức qua dâu ","
+/// comma          → condition ("," condition)?
+/// // Toán tử ba ngôi
+/// condition      → equality ( "?" condition ":" condition )?
 /// // Đẳng thức
 /// equality       → comparison ( ( "!=" | "==" ) comparison )*
 /// // So sách
@@ -18,8 +21,9 @@ import 'package:dlox/token_type.dart';
 /// // Phép nhân chia
 /// factor         → unary ( ( "/" | "*" ) unary )*
 /// // Toán tử một ngôi
-/// unary          → ( "!" | "-" ) unary
-///                | primary
+/// unary          → ( "!" | "-" | "--" | "++" ) unary
+///                | postfix
+/// postfix        → primary ("++" | "--")*
 /// primary        → NUMBER | STRING | "true" | "false" | "nil"
 ///                | "(" expression ")"
 ///```
@@ -67,7 +71,7 @@ class Parser {
     List<Stmt> stmts = [];
     try {
       while (!_isAtEnd) {
-        stmts.add(_statement());
+        stmts.add(_declaration());
       }
       return stmts;
     } on ParserError catch (_) {
@@ -117,7 +121,7 @@ class Parser {
     _advance();
 
     while (!_isAtEnd) {
-      if (_peek().type == TokenType.semicolon) return;
+      if (_match([TokenType.semicolon])) return;
 
       switch (_peek().type) {
         case TokenType.kClass:
@@ -139,29 +143,46 @@ class Parser {
     }
   }
 
-  Expr _comma() {
-    Expr expr = _equality();
+  Expr _expression() => _comma();
 
-    while (_match([TokenType.comma])) {
-      Token token = _previous();
-      Expr right = _equality();
-      expr = Expr.binary(expr, token, right);
+  Expr _comma() {
+    Expr expr = _assignment();
+
+    if (_match([TokenType.comma])) {
+      Token operator = _previous();
+      Expr right = _assignment();
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
   }
 
-  Expr _expression() => _conditional();
+  Expr _assignment() {
+    Expr expr = _conditional();
+
+    if (_match([TokenType.equal])) {
+      Token equals = _previous();
+      Expr value = _assignment();
+
+      if (expr is Variable) {
+        Token name = expr.token;
+        return Expr.assignment(name, value);
+      }
+
+      _error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
 
   Expr _conditional() {
     Expr expr = _equality();
 
     if (_match([TokenType.question])) {
-      Expr thenBranch = _expression();
-      _consume(TokenType.colon, 'Expect ":" after then branch of conditional expression.');
-      Expr elseBranch = _expression();
-
-      expr = Expr.conditional(expr, thenBranch, elseBranch);
+      Expr thenExpr = _conditional();
+      _consume(TokenType.colon, 'Expect ":" for trinary operator.');
+      Expr elseExpr = _conditional();
+      expr = Expr.conditional(expr, thenExpr, elseExpr);
     }
 
     return expr;
@@ -170,7 +191,7 @@ class Parser {
   Expr _equality() {
     Expr expr = _comparison();
 
-    while (_match([TokenType.bangEqual, TokenType.equalEqual])) {
+    if (_match([TokenType.bangEqual, TokenType.equalEqual])) {
       Token operator = _previous();
       Expr right = _comparison();
       expr = Expr.binary(expr, operator, right);
@@ -182,10 +203,9 @@ class Parser {
   Expr _comparison() {
     Expr expr = _term();
 
-    while (_match([TokenType.greater, TokenType.greaterEqual, TokenType.less, TokenType.lessEqual])) {
+    if (_match([TokenType.greater, TokenType.greaterEqual, TokenType.less, TokenType.lessEqual])) {
       Token operator = _previous();
       Expr right = _term();
-
       expr = Expr.binary(expr, operator, right);
     }
 
@@ -195,10 +215,9 @@ class Parser {
   Expr _term() {
     Expr expr = _factor();
 
-    while (_match([TokenType.plus, TokenType.minus])) {
+    if (_match([TokenType.minus, TokenType.plus])) {
       Token operator = _previous();
       Expr right = _factor();
-
       expr = Expr.binary(expr, operator, right);
     }
 
@@ -208,10 +227,9 @@ class Parser {
   Expr _factor() {
     Expr expr = _unary();
 
-    while (_match([TokenType.slash, TokenType.star])) {
+    if (_match([TokenType.slash, TokenType.star])) {
       Token operator = _previous();
       Expr right = _unary();
-
       expr = Expr.binary(expr, operator, right);
     }
 
@@ -219,33 +237,54 @@ class Parser {
   }
 
   Expr _unary() {
-    if (_match([TokenType.bang, TokenType.minus])) {
+    if (_match([TokenType.minus, TokenType.minusMinus, TokenType.plus, TokenType.plusPlus])) {
       Token operator = _previous();
       Expr right = _unary();
 
       return Expr.unary(operator, right);
     }
 
-    return _primary();
+    return _postfix();
+  }
+
+  Expr _postfix() {
+    Expr expr = _primary();
+
+    if (_match([TokenType.plusPlus, TokenType.minusMinus])) {
+      Token operator = _previous();
+      expr = Expr.postfix(expr, operator);
+    }
+
+    return expr;
   }
 
   Expr _primary() {
-    Token token = _peek();
-
-    if (_match([TokenType.kTrue])) return Literal(true);
-    if (_match([TokenType.kFalse])) return Literal(false);
-    if (_match([TokenType.kNil])) return Literal(null);
-
-    if (_match([TokenType.number, TokenType.string])) return Literal(token.literal);
+    if (_match([TokenType.number])) return Expr.literal(_previous().literal);
+    if (_match([TokenType.string])) return Expr.literal(_previous().literal);
+    if (_match([TokenType.kTrue])) return Expr.literal(_previous().literal);
+    if (_match([TokenType.kFalse])) return Expr.literal(_previous().literal);
+    if (_match([TokenType.kNil])) return Expr.literal(_previous().literal);
     if (_match([TokenType.leftBrace])) {
-      Expr expression = _expression();
-
-      _consume(TokenType.rightBrace, 'Expect expression.');
-
-      return Expr.grouping(expression);
+      Expr expr = _expression();
+      _consume(TokenType.rightBrace, 'Missing ")" in group.');
+      return Grouping(expr);
     }
 
+    if (_match([TokenType.identifier])) return Expr.variable(_previous());
+
     throw ParserError();
+  }
+
+  Stmt _declaration() {
+    try {
+      if (_match([TokenType.kVar])) {
+        return _varStmt();
+      }
+      return _statement();
+    } on ParserError catch (_) {
+      _synchronize();
+      rethrow;
+    }
   }
 
   Stmt _statement() {
@@ -253,9 +292,21 @@ class Parser {
     return _expressionStmt();
   }
 
+  Stmt _varStmt() {
+    Token name = _consume(TokenType.identifier, 'Expect variable name.');
+
+    Expr? initializer;
+
+    if (_match([TokenType.equal])) {
+      initializer = _expression();
+    }
+    _consume(TokenType.semicolon, 'Missing ";" after variable declaration.');
+    return Stmt.varStmt(name, initializer);
+  }
+
   Stmt _printStmt() {
     var expression = _expression();
-    _consume(TokenType.semicolon, 'Missing ; after value.');
+    _consume(TokenType.semicolon, 'Missing ";" after value.');
 
     return Stmt.printStmt(expression);
   }

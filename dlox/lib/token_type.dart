@@ -2,19 +2,19 @@
 
 enum TokenType {
   /// Token đơn kí tự
-  /* { */ leftParen,
-  /* } */ rightParen,
-  /* ( */ leftBrace,
-  /* ) */ rightBrace,
-  /* , */ comma,
-  /* . */ dot,
-  /* - */ minus,
-  /* + */ plus,
-  /* ; */ semicolon, 
-  /* / */ slash,
-  /* * */ star,
-  /* ? */ question,
-  /* : */ colon,
+  /* { */    leftParen,
+  /* } */    rightParen,
+  /* ( */    leftBrace,
+  /* ) */    rightBrace,
+  /* , */    comma,
+  /* . */    dot,
+  /* - -- */ minus, minusMinus,
+  /* + ++ */ plus, plusPlus,
+  /* ; */    semicolon, 
+  /* / */    slash,
+  /* * */    star,
+  /* ? */    question,
+  /* : */    colon,
 
   /// Token so sánh
   /* ! != */ bang, bangEqual,
