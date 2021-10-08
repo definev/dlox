@@ -11,11 +11,11 @@ Hiện tại tôi đang đọc cuốn `Crafting Interpreters` của Robert Nystr
   - [x] Challenge 3: AST Printer In Reverse Polish Notation.
   - [x] GenerateAst tool
 
-- [ ] 6. [**Parsing Expressions**](http://www.craftinginterpreters.com/parsing-expressions.html) 
-  - [ ] Helper method for parsing left-associative series of binary operators. *Swift can't pass variadic arguments between functions (no array splatting), so it's a little bit hugly.*
-  - [ ] Challenge 1: Add prefix and postfix ++ and -- operators.
-  - [ ] Challenge 2: Add support for the C-style conditional or “ternary” operator `?:`
-  - [ ] Challenge 3: Add error productions to handle each binary operator appearing without a left-hand operand.
+- [x] 6. [**Parsing Expressions**](http://www.craftinginterpreters.com/parsing-expressions.html) 
+  - [x] Helper method for parsing left-associative series of binary operators. *Swift can't pass variadic arguments between functions (no array splatting), so it's a little bit hugly.*
+  - [x] Challenge 1: Add prefix and postfix ++ and -- operators.
+  - [x] Challenge 2: Add support for the C-style conditional or “ternary” operator `?:`
+  - [x] Challenge 3: Add error productions to handle each binary operator appearing without a left-hand operand.
 
 - [ ] 7. [**Evaluating Expressions**](http://www.craftinginterpreters.com/evaluating-expressions.html)
   - [ ] Challenge 1: Allowing comparisons on types other than numbers could be useful.
