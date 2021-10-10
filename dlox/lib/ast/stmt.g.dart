@@ -18,12 +18,16 @@ abstract class Stmt {
         name,
         initializer,
       );
+  static Stmt block(List<Stmt> statements) => Block(
+        statements,
+      );
 }
 
 abstract class Visitor<R> {
   R visitExpressionStmtStmt(ExpressionStmt stmt);
   R visitPrintStmtStmt(PrintStmt stmt);
   R visitVarStmtStmt(VarStmt stmt);
+  R visitBlockStmt(Block stmt);
 }
 
 // no docs
@@ -67,5 +71,19 @@ class VarStmt extends Stmt {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitVarStmtStmt(this);
+  }
+}
+
+// no docs
+class Block extends Stmt {
+  Block(
+    this.statements,
+  );
+
+  final List<Stmt> statements;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitBlockStmt(this);
   }
 }

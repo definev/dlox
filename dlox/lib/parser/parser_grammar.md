@@ -20,7 +20,7 @@ term           → factor ( ( "-" | "+" ) factor )*
 // Phép nhân chia
 factor         → unary ( ( "/" | "*" ) unary )*
 // Toán tử một ngôi
-unary          → ( "!" | "-" | "--" | "++" ) unary
+unary          → ( "!" | "-" | "--" | "+" | "++" ) unary
                | postfix
 postfix        → primary ("++" | "--")*
 primary        → NUMBER | STRING | "true" | "false" | "nil"
@@ -32,7 +32,10 @@ Statement grammar
 program        → declaration* EOF 
 
 declaration    → varDecl
-               | statement 
+               | statement
+               | block
+
+block          → "{" delaration* "}"
 
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 

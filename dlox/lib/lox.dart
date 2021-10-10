@@ -10,7 +10,7 @@ import 'package:dlox/token.dart';
 import 'token_type.dart';
 
 class Lox {
-  static final Interpreter interpreter = Interpreter();
+  static Interpreter interpreter = Interpreter();
 
   static bool hadError = false;
   static bool hadRuntimeError = false;
@@ -81,12 +81,23 @@ class Lox {
 }
 
 void main() {
-  String raw = '''
-var myName = "Definev_";
-print myName + " handsome!";
-
-myName = "That true!";
-print myName;''';
-
-  Lox.run(raw);
+  Lox.run('''var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+print a;
+print b;
+print c;''');
 }

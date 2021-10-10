@@ -17,14 +17,14 @@ Hiện tại tôi đang đọc cuốn `Crafting Interpreters` của Robert Nystr
   - [x] Challenge 2: Add support for the C-style conditional or “ternary” operator `?:`
   - [x] Challenge 3: Add error productions to handle each binary operator appearing without a left-hand operand.
 
-- [ ] 7. [**Evaluating Expressions**](http://www.craftinginterpreters.com/evaluating-expressions.html)
-  - [ ] Challenge 1: Allowing comparisons on types other than numbers could be useful.
-  - [ ] Challenge 2: Many languages define + such that if either operand is a string, the other is converted to a string and the results are then concatenated.
-  - [ ] Challenge 3: Change the implementation in visitBinary() to detect and report a runtime error when dividing by 0. 
+- [x] 7. [**Evaluating Expressions**](http://www.craftinginterpreters.com/evaluating-expressions.html)
+  - [x] Challenge 1: Allowing comparisons on types other than numbers could be useful.
+  - [x] Challenge 2: Many languages define + such that if either operand is a string, the other is converted to a string and the results are then concatenated.
+  - [x] Challenge 3: Change the implementation in visitBinary() to detect and report a runtime error when dividing by 0. 
 
 - [ ] 8. [**Statements and State**](http://www.craftinginterpreters.com/statements-and-state.html)
   - [ ] Challenge 1: Add support to the REPL to let users type in both statements and expressions.
-  - [ ] Challenge 2: Make it a runtime error to access a variable that has not been initialized or assigned to
+  - [x] Challenge 2: Make it a runtime error to access a variable that has not been initialized or assigned to
   - Challenge 3: Nothing to implement.
 
 - [ ] 9. [**Control Flow**](http://www.craftinginterpreters.com/control-flow.html)

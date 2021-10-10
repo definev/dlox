@@ -3,11 +3,16 @@ import 'package:dlox/ast/stmt.dart' as stmt_ast;
 import 'package:dlox/interpreter/environment.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
+import 'package:dlox/native.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
 class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
-  final Environment _environment = Environment();
+  final NativeCall _native;
+  NativeCall get native => _native;
+  Environment _environment = Environment(values: {}, initialized: {});
+
+  Interpreter([this._native = Native]);
 
   void interpret(List<stmt_ast.Stmt> statements) {
     try {
@@ -19,8 +24,8 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     }
   }
 
-  _execute(stmt_ast.Stmt statements) {
-    statements.accept(this);
+  _execute(stmt_ast.Stmt statement) {
+    statement.accept(this);
   }
 
   @override
@@ -112,6 +117,8 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
       case TokenType.minus:
         _checkNumberOperant(expr.operator, right);
         return -right;
+      case TokenType.plus:
+        return right.toString();
       default:
     }
 
@@ -137,7 +144,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   visitAssignmentExpr(expr_ast.Assignment expr) {
-    _environment.define(expr.name, _evaluate(expr.value));
+    _environment.assign(expr.name, _evaluate(expr.value));
     return _environment.get(expr.name);
   }
 
@@ -192,6 +199,18 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     return object.toString();
   }
 
+  void _executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
+    Environment _enclosing = _environment.clone();
+    try {
+      _environment = childScope.clone();
+      for (final statement in statements) {
+        _execute(statement);
+      }
+    } finally {
+      _environment = _enclosing;
+    }
+  }
+
   @override
   void visitExpressionStmtStmt(stmt_ast.ExpressionStmt stmt) {
     _evaluate(stmt.expression);
@@ -199,12 +218,17 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   void visitPrintStmtStmt(stmt_ast.PrintStmt stmt) {
-    print(_stringify(_evaluate(stmt.expression)));
+    _native.print(_stringify(_evaluate(stmt.expression)));
   }
 
   @override
   void visitVarStmtStmt(stmt_ast.VarStmt stmt) {
     final value = _evaluate(stmt.initializer);
     _environment.define(stmt.name, value);
+  }
+
+  @override
+  void visitBlockStmt(stmt_ast.Block stmt) {
+    _executeBlock(stmt.statements, Environment(values: {}, initialized: {}, enclosing: _environment));
   }
 }
