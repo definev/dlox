@@ -33,7 +33,6 @@ program        → declaration* EOF
 
 declaration    → varDecl
                | statement
-               | block
 
 block          → "{" delaration* "}"
 
@@ -41,6 +40,13 @@ varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 
 statement      → exprStmt
                | printStmt 
+               | ifStmt
+               | block
+
+printStmt      → "print" expression ";"
+
+ifStmt         → "if" "(" expression ")" statement 
+               ( "else" statement )?;
 ```
 
 Parser của Lox sẽ tiếp cận theo hướng từ trên xuống dưới.

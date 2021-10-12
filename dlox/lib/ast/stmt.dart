@@ -8,6 +8,7 @@ part 'stmt.g.dart';
   "ExpressionStmt : Expr expression",
   "PrintStmt      : Expr expression",
   "VarStmt        : Token name, Expr? initializer",
+  "IfStmt         : Expr condition, Stmt thenBranch, Stmt? elseBranch",
   "Block          : List<Stmt> statements",
 ])
 // ignore: unused_element

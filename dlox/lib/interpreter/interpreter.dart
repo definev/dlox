@@ -231,4 +231,13 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   void visitBlockStmt(stmt_ast.Block stmt) {
     _executeBlock(stmt.statements, Environment(values: {}, initialized: {}, enclosing: _environment));
   }
+
+  @override
+  void visitIfStmtStmt(stmt_ast.IfStmt stmt) {
+    if (_evaluate(stmt.condition)) {
+      _execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      _execute(stmt.elseBranch!);
+    }
+  }
 }

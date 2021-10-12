@@ -71,8 +71,8 @@ class Lox {
 
   static void runPrompt() {
     while (true) {
-      String? line = stdin.readLineSync();
       stdout.write('> ');
+      String? line = stdin.readLineSync();
       if (line == null) break;
       run(line);
       hadError = false;
@@ -80,24 +80,9 @@ class Lox {
   }
 }
 
+// FIX: Chưa đệ quy hết expression
 void main() {
-  Lox.run('''var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-  var a = "outer a";
-  var b = "outer b";
-  {
-    var a = "inner a";
-    print a;
-    print b;
-    print c;
-  }
-  print a;
-  print b;
-  print c;
-}
-print a;
-print b;
-print c;''');
+  Lox.run('''
+  print 1 + 4 + 5;
+  ''');
 }
