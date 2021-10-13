@@ -86,19 +86,19 @@ class Parser {
     }
   }
 
-  Expr _expression() => _assignment();
+  Expr _expression() => _comma();
 
-  // Expr _comma() {
-  //   Expr expr = _assignment();
+  Expr _comma() {
+    Expr expr = _assignment();
 
-  //   if (_match([TokenType.comma])) {
-  //     Token operator = _previous();
-  //     Expr right = _assignment();
-  //     expr = Expr.binary(expr, operator, right);
-  //   }
+    if (_match([TokenType.comma])) {
+      Token operator = _previous();
+      Expr right = _assignment();
+      expr = Expr.binary(expr, operator, right);
+    }
 
-  //   return expr;
-  // }
+    return expr;
+  }
 
   Expr _assignment() {
     Expr expr = _conditional();
@@ -134,7 +134,7 @@ class Parser {
   Expr _equality() {
     Expr expr = _comparison();
 
-    if (_match([TokenType.bangEqual, TokenType.equalEqual])) {
+    while (_match([TokenType.bangEqual, TokenType.equalEqual])) {
       Token operator = _previous();
       Expr right = _comparison();
       expr = Expr.grouping(Expr.binary(expr, operator, right));
@@ -146,7 +146,12 @@ class Parser {
   Expr _comparison() {
     Expr expr = _term();
 
-    if (_match([TokenType.greater, TokenType.greaterEqual, TokenType.less, TokenType.lessEqual])) {
+    while (_match([
+      TokenType.greater,
+      TokenType.greaterEqual,
+      TokenType.less,
+      TokenType.lessEqual
+    ])) {
       Token operator = _previous();
       Expr right = _term();
       expr = Expr.grouping(Expr.binary(expr, operator, right));
@@ -158,7 +163,7 @@ class Parser {
   Expr _term() {
     Expr expr = _factor();
 
-    if (_match([TokenType.minus, TokenType.plus])) {
+    while (_match([TokenType.minus, TokenType.plus])) {
       Token operator = _previous();
       Expr right = _factor();
       expr = Expr.grouping(Expr.binary(expr, operator, right));
@@ -170,7 +175,7 @@ class Parser {
   Expr _factor() {
     Expr expr = _unary();
 
-    if (_match([TokenType.slash, TokenType.star])) {
+    while (_match([TokenType.slash, TokenType.star])) {
       Token operator = _previous();
       Expr right = _unary();
       expr = Expr.grouping(Expr.binary(expr, operator, right));
@@ -180,7 +185,13 @@ class Parser {
   }
 
   Expr _unary() {
-    if (_match([TokenType.bang, TokenType.minus, TokenType.minusMinus, TokenType.plus, TokenType.plusPlus])) {
+    if (_match([
+      TokenType.bang,
+      TokenType.minus,
+      TokenType.minusMinus,
+      TokenType.plus,
+      TokenType.plusPlus
+    ])) {
       Token operator = _previous();
       Expr right = _unary();
 
@@ -202,11 +213,14 @@ class Parser {
   }
 
   Expr _primary() {
-    if (_match([TokenType.number])) return Expr.literal(_previous().literal);
-    if (_match([TokenType.string])) return Expr.literal(_previous().literal);
-    if (_match([TokenType.kTrue])) return Expr.literal(_previous().literal);
-    if (_match([TokenType.kFalse])) return Expr.literal(_previous().literal);
-    if (_match([TokenType.kNil])) return Expr.literal(_previous().literal);
+    if (_match([TokenType.kTrue])) return Expr.literal(true);
+    if (_match([TokenType.kFalse])) return Expr.literal(false);
+    if (_match([TokenType.kNil])) return Expr.literal(null);
+
+    if (_match([TokenType.number, TokenType.string])) {
+      return Expr.literal(_previous().literal);
+    }
+
     if (_match([TokenType.leftBrace])) {
       Expr expr = _expression();
       _consume(TokenType.rightBrace, 'Missing ")" in group.');

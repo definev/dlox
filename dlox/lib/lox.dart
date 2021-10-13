@@ -82,7 +82,5 @@ class Lox {
 
 // FIX: Chưa đệ quy hết expression
 void main() {
-  Lox.run('''
-  print 1 + 4 + 5;
-  ''');
+  Lox.run('if (true) print "Success!";');
 }
