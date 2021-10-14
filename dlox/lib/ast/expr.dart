@@ -13,9 +13,7 @@ part 'expr.g.dart';
   "Conditional    : Expr condition, Expr thenBranch, Expr elseBranch",
   "Variable       : Token token",
   "Assignment     : Token name, Expr value",
+  "Logical        : Expr left, Token operator, Expr right",
 ])
 // ignore: unused_element
 class _Expr {}
-
-
-

@@ -40,6 +40,11 @@ abstract class Expr {
         name,
         value,
       );
+  static Expr logical(Expr left, Token operator, Expr right) => Logical(
+        left,
+        operator,
+        right,
+      );
 }
 
 abstract class Visitor<R> {
@@ -51,6 +56,7 @@ abstract class Visitor<R> {
   R visitConditionalExpr(Conditional expr);
   R visitVariableExpr(Variable expr);
   R visitAssignmentExpr(Assignment expr);
+  R visitLogicalExpr(Logical expr);
 }
 
 // Câu lệnh có hai vế
@@ -179,5 +185,23 @@ class Assignment extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitAssignmentExpr(this);
+  }
+}
+
+// no docs
+class Logical extends Expr {
+  Logical(
+    this.left,
+    this.operator,
+    this.right,
+  );
+
+  final Expr left;
+  final Token operator;
+  final Expr right;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitLogicalExpr(this);
   }
 }

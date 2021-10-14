@@ -7,8 +7,7 @@ import '../fake/print_native_call.dart';
 void main() {
   group('If statement', () {
     test('Condition: true', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('if (true) print "Success!";');
 
@@ -16,8 +15,7 @@ void main() {
     });
 
     test('Condition: false no else statement', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('if (false) print "Success!";');
 
@@ -25,8 +23,7 @@ void main() {
     });
 
     test('Condition: false with else statement', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run(
           '''
@@ -40,8 +37,7 @@ void main() {
     });
 
     test('Nested if-else', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run(
           '''

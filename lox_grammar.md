@@ -1,49 +1,64 @@
 
-# Parser grammar rules
+# Lox grammar rules
 Expression grammar
 ```js
 // Biểu thức
-expression     → comma
+expression     → comma ;
 // Chia biểu thức qua dâu ","
-comma          → assignment ("," assignment)?
+comma          → assignment ("," assignment)? ;
 // Đẳng thức
 assignment     → IDENTIFIER "=" assignment 
-               | conditional
+               | conditional ;
 // Toán tử ba ngôi
-conditional    → equality ( "?" conditional ":" conditional )?
+conditional    → logic_or ( "?" logic_or ":" logic_or )? ;
+// Phép logic hoặc
+logic_or       → logic_and ("or" logic_and)* ;
+// Phép logic và
+logic_or       → equality ("and" equality)* ;
 // Đẳng thức
-equality       → comparison ( ( "!=" | "==" ) comparison )*
+equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // So sách
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // Phép cộng trừ
-term           → factor ( ( "-" | "+" ) factor )*
+term           → factor ( ( "-" | "+" ) factor )* ;
 // Phép nhân chia
-factor         → unary ( ( "/" | "*" ) unary )*
+factor         → unary ( ( "/" | "*" ) unary )* ;
 // Toán tử một ngôi
 unary          → ( "!" | "-" | "--" | "+" | "++" ) unary
-               | postfix
-postfix        → primary ("++" | "--")*
+               | postfix ;
+postfix        → primary ("++" | "--")* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")"
+               | "(" expression ")" ;
 ```
 
 Statement grammar
 ```js
-program        → declaration* EOF 
+program        → declaration* EOF ; 
 
 declaration    → varDecl
-               | statement
+               | statement ;
 
-block          → "{" delaration* "}"
 
-varDecl        → "var" IDENTIFIER ("=" expression)? ";"
+varDecl        → "var" IDENTIFIER ("=" expression)? ";" ;
 
 statement      → exprStmt
                | printStmt 
                | ifStmt
-               | block
+               | whileStmt
+               | block ;
 
-printStmt      → "print" expression ";"
+exprStmt       → expression ";"
+
+whileStmt      → "while" "(" expression ")" statement ;
+
+
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                 expression? ";"
+                 expression? ")" statement ;
+
+block          → "{" delaration* "}" ;
+
+printStmt      → "print" expression ";" ;
 
 ifStmt         → "if" "(" expression ")" statement 
                ( "else" statement )?;

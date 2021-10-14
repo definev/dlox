@@ -7,8 +7,7 @@ import '../fake/print_native_call.dart';
 main() {
   group('Block statement', () {
     test('Nested variable', () {
-      NativeCallScope _native = NativeCallScope();
-      Lox.interpreter = Interpreter(_native);
+      var native = setUpFakePrint();
 
       Lox.run('''var a = "global a";
 var b = "global b";
@@ -31,7 +30,7 @@ print b;
 print c;''');
 
       expect(
-          _native.output,
+          native.output,
           equals(
               'inner a\nouter b\nglobal c\nouter a\nouter b\nglobal c\nglobal a\nglobal b\nglobal c\n'));
     });

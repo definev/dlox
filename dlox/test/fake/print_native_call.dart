@@ -1,3 +1,5 @@
+import 'package:dlox/interpreter/interpreter.dart';
+import 'package:dlox/lox.dart';
 import 'package:dlox/native.dart';
 import 'package:test/fake.dart';
 
@@ -9,4 +11,10 @@ class NativeCallScope extends Fake implements NativeCall {
     output += object.toString() + "\n";
     return object.toString();
   }
+}
+
+NativeCallScope setUpFakePrint() {
+  NativeCallScope native = NativeCallScope();
+  Lox.interpreter = Interpreter(native);
+  return native;
 }

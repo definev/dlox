@@ -17,7 +17,8 @@ class Parser {
         stmts.add(_declaration());
       }
       return stmts;
-    } on ParserError catch (_) {
+    } on ParserError catch (e) {
+      Lox.parserError(e.token, e.message);
       return null;
     }
   }
@@ -57,7 +58,7 @@ class Parser {
 
   ParserError _error(Token token, String message) {
     Lox.parserError(token, message);
-    return ParserError();
+    return ParserError(token, message);
   }
 
   void _synchronize() {
@@ -119,13 +120,37 @@ class Parser {
   }
 
   Expr _conditional() {
+    Expr expr = _logicOr();
+
+    while (_match([TokenType.question])) {
+      Expr thenExpr = _logicOr();
+      _consume(TokenType.colon, 'Expect ":" for trinary operator.');
+      Expr elseExpr = _logicOr();
+      expr = Expr.grouping(Expr.conditional(expr, thenExpr, elseExpr));
+    }
+
+    return expr;
+  }
+
+  Expr _logicOr() {
+    Expr expr = _logicAnd();
+
+    while (_match([TokenType.kOr])) {
+      Token operator = _previous();
+      Expr right = _logicAnd();
+      expr = Expr.logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  Expr _logicAnd() {
     Expr expr = _equality();
 
-    if (_match([TokenType.question])) {
-      Expr thenExpr = _conditional();
-      _consume(TokenType.colon, 'Expect ":" for trinary operator.');
-      Expr elseExpr = _conditional();
-      expr = Expr.grouping(Expr.conditional(expr, thenExpr, elseExpr));
+    while (_match([TokenType.kAnd])) {
+      Token operator = _previous();
+      Expr right = _logicAnd();
+      expr = Expr.logical(expr, operator, right);
     }
 
     return expr;
@@ -229,7 +254,7 @@ class Parser {
 
     if (_match([TokenType.identifier])) return Expr.variable(_previous());
 
-    throw ParserError();
+    throw ParserError(_peek(), 'Can\'t figure out what type is.');
   }
 
   Stmt _declaration() {
@@ -259,8 +284,62 @@ class Parser {
   Stmt _statement() {
     if (_match([TokenType.kIf])) return _ifStmt();
     if (_match([TokenType.kPrint])) return _printStmt();
+    if (_match([TokenType.kWhile])) return _whileStmt();
+    if (_match([TokenType.kFor])) return _forStmt();
     if (_match([TokenType.leftParen])) return Stmt.block(_block());
-    return _expressionStmt();
+
+    return _exprStmt();
+  }
+
+  Stmt _forStmt() {
+    _consume(TokenType.leftBrace, 'Missing "(" after "for" loop.');
+    Stmt? initialized;
+    if (_match([TokenType.kVar])) {
+      initialized = _varStmt();
+    } else if (!_match([TokenType.semicolon])) {
+      initialized = _exprStmt();
+    }
+
+    Expr condition = Expr.literal(true);
+    if (!_match([TokenType.semicolon])) {
+      condition = _expression();
+    }
+
+    _consume(
+        TokenType.semicolon, 'Missing ";" after condition part "for" loop.');
+
+    Expr? increment;
+    if (!_match([TokenType.rightBrace])) {
+      increment = _expression();
+    }
+    _consume(TokenType.rightBrace, 'Missing ")" to end "for" loop.');
+
+    Stmt body = _statement();
+
+    if (increment != null) {
+      body = Stmt.block([
+        body,
+        Stmt.exprStmt(increment),
+      ]);
+    }
+
+    body = Stmt.whileStmt(condition, body);
+
+    if (initialized != null) {
+      body = Stmt.block([initialized, body]);
+    }
+
+    return body;
+  }
+
+  Stmt _whileStmt() {
+    _consume(TokenType.leftBrace,
+        'Missing "(" for declare condition for while loop.');
+    Expr condition = _expression();
+    _consume(TokenType.rightBrace,
+        'Missing ")" for close declare condition for while loop.');
+    Stmt body = _statement();
+    return Stmt.whileStmt(condition, body);
   }
 
   Stmt _varStmt() {
@@ -282,11 +361,11 @@ class Parser {
     return Stmt.printStmt(expression);
   }
 
-  Stmt _expressionStmt() {
+  Stmt _exprStmt() {
     var expression = _expression();
     _consume(TokenType.semicolon, 'Missing ; after expression.');
 
-    return Stmt.expressionStmt(expression);
+    return Stmt.exprStmt(expression);
   }
 
   Stmt _ifStmt() {
@@ -302,4 +381,9 @@ class Parser {
   }
 }
 
-class ParserError extends Error {}
+class ParserError extends Error {
+  final Token token;
+  final String message;
+
+  ParserError(this.token, this.message);
+}

@@ -8,7 +8,7 @@ part of 'stmt.dart';
 
 abstract class Stmt {
   R accept<R>(Visitor<R> visitor);
-  static Stmt expressionStmt(Expr expression) => ExpressionStmt(
+  static Stmt exprStmt(Expr expression) => ExprStmt(
         expression,
       );
   static Stmt printStmt(Expr expression) => PrintStmt(
@@ -27,19 +27,24 @@ abstract class Stmt {
   static Stmt block(List<Stmt> statements) => Block(
         statements,
       );
+  static Stmt whileStmt(Expr condition, Stmt body) => WhileStmt(
+        condition,
+        body,
+      );
 }
 
 abstract class Visitor<R> {
-  R visitExpressionStmtStmt(ExpressionStmt stmt);
+  R visitExprStmtStmt(ExprStmt stmt);
   R visitPrintStmtStmt(PrintStmt stmt);
   R visitVarStmtStmt(VarStmt stmt);
   R visitIfStmtStmt(IfStmt stmt);
   R visitBlockStmt(Block stmt);
+  R visitWhileStmtStmt(WhileStmt stmt);
 }
 
 // no docs
-class ExpressionStmt extends Stmt {
-  ExpressionStmt(
+class ExprStmt extends Stmt {
+  ExprStmt(
     this.expression,
   );
 
@@ -47,7 +52,7 @@ class ExpressionStmt extends Stmt {
 
   @override
   R accept<R>(Visitor<R> visitor) {
-    return visitor.visitExpressionStmtStmt(this);
+    return visitor.visitExprStmtStmt(this);
   }
 }
 
@@ -110,5 +115,21 @@ class Block extends Stmt {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitBlockStmt(this);
+  }
+}
+
+// no docs
+class WhileStmt extends Stmt {
+  WhileStmt(
+    this.condition,
+    this.body,
+  );
+
+  final Expr condition;
+  final Stmt body;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitWhileStmtStmt(this);
   }
 }

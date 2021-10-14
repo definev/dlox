@@ -69,13 +69,16 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
         if (left is String && right is num || left is num && right is String) {
           return '$left$right';
         }
-        throw RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
+        throw RuntimeError(
+            expr.operator, "Operands must be two numbers or two strings.");
       case TokenType.star:
         _checkNumberOperants(expr.operator, [left, right]);
         return left * right;
       case TokenType.slash:
         _checkNumberOperants(expr.operator, [left, right]);
-        if (right == 0) throw RuntimeError(expr.operator, "Cannot divided by 0.");
+        if (right == 0) {
+          throw RuntimeError(expr.operator, "Cannot divided by 0.");
+        }
         return left / right;
       default:
     }
@@ -88,7 +91,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     final condition = _evaluate(expr.condition);
     _checkBool(condition);
     dynamic value;
-    if (condition) {
+    if (_isTruthy(condition)) {
       value = _evaluate(expr.thenBranch);
     } else {
       value = _evaluate(expr.elseBranch);
@@ -129,11 +132,24 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   visitPostfixExpr(expr_ast.Postfix expr) {
     switch (expr.operator.type) {
       case TokenType.plusPlus:
-        return expr.left.accept(this) + 1;
+        if (expr.left is expr_ast.Variable) {
+          _environment.assign(
+            (expr.left as expr_ast.Variable).token,
+            _evaluate(expr.left) + 1,
+          );
+        }
+        return _evaluate(expr.left);
       case TokenType.minusMinus:
-        return expr.left.accept(this) - 1;
+        if (expr.left is expr_ast.Variable) {
+          _environment.assign(
+            (expr.left as expr_ast.Variable).token,
+            _evaluate(expr.left) - 1,
+          );
+        }
+        return _evaluate(expr.left);
       default:
-        throw RuntimeError(expr.operator, 'use "${expr.operator.lexeme}" wrong type.');
+        throw RuntimeError(
+            expr.operator, 'use "${expr.operator.lexeme}" wrong type.');
     }
   }
 
@@ -146,6 +162,25 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   visitAssignmentExpr(expr_ast.Assignment expr) {
     _environment.assign(expr.name, _evaluate(expr.value));
     return _environment.get(expr.name);
+  }
+
+  @override
+  visitLogicalExpr(expr_ast.Logical expr) {
+    final left = _evaluate(expr.left);
+    final right = _evaluate(expr.right);
+
+    switch (expr.operator.type) {
+      case TokenType.kOr:
+        if (_isTruthy(left)) return left;
+        if (_isTruthy(right)) return right;
+        break;
+      case TokenType.kAnd:
+        if (_isTruthy(left) && _isTruthy(right)) return true;
+        return false;
+      default:
+    }
+
+    return null;
   }
 
   bool _isTruthy(dynamic value) {
@@ -181,7 +216,9 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   }
 
   bool _checkBool(dynamic value) {
-    if (value == null) throw RuntimeError(TokenParser().kIf(-1), 'Must be bool value.');
+    if (value == null) {
+      throw RuntimeError(TokenParser().kIf(-1), 'Must be bool value.');
+    }
     return true;
   }
 
@@ -200,19 +237,18 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   }
 
   void _executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
-    Environment _enclosing = _environment.clone();
     try {
       _environment = childScope.clone();
       for (final statement in statements) {
         _execute(statement);
       }
     } finally {
-      _environment = _enclosing;
+      _environment = _environment.enclosing!.clone();
     }
   }
 
   @override
-  void visitExpressionStmtStmt(stmt_ast.ExpressionStmt stmt) {
+  void visitExprStmtStmt(stmt_ast.ExprStmt stmt) {
     _evaluate(stmt.expression);
   }
 
@@ -229,7 +265,10 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   void visitBlockStmt(stmt_ast.Block stmt) {
-    _executeBlock(stmt.statements, Environment(values: {}, initialized: {}, enclosing: _environment));
+    _executeBlock(
+      stmt.statements,
+      Environment(values: {}, initialized: {}, enclosing: _environment.clone()),
+    );
   }
 
   @override
@@ -238,6 +277,13 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
       _execute(stmt.thenBranch);
     } else if (stmt.elseBranch != null) {
       _execute(stmt.elseBranch!);
+    }
+  }
+
+  @override
+  void visitWhileStmtStmt(stmt_ast.WhileStmt stmt) {
+    while (_isTruthy(_evaluate(stmt.condition))) {
+      _execute(stmt.body);
     }
   }
 }

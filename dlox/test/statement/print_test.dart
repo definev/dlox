@@ -8,16 +8,14 @@ import '../fake/print_native_call.dart';
 void main() {
   group('Print statement', () {
     test('String', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('''print "Hello world";''');
       expect(native.output, equals('Hello world\n'));
     });
 
     test('Number', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('''
       print 1;
@@ -27,8 +25,7 @@ void main() {
     });
 
     test('Variable', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('''
       var whoEat = "Me";
@@ -40,8 +37,7 @@ void main() {
     });
 
     test('Compute on print', () {
-      NativeCallScope native = NativeCallScope();
-      Lox.interpreter = Interpreter(native);
+      var native = setUpFakePrint();
 
       Lox.run('''
       print 1 + 4 + 5;

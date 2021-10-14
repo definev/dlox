@@ -9,12 +9,17 @@ class Environment {
   final Map<String, dynamic> _values;
   final Map<String, bool> _initialized;
 
-  Environment({required Map<String, dynamic> values, required Map<String, bool> initialized, Environment? enclosing})
+  Environment(
+      {required Map<String, dynamic> values,
+      required Map<String, bool> initialized,
+      Environment? enclosing})
       : _initialized = initialized,
         _values = values,
         _enclosing = enclosing;
 
   bool isInitialize(Token token) => _initialized[token.lexeme] ?? false;
+
+  Environment? get enclosing => _enclosing;
 
   void print([int scopeLevel = 0]) {
     Native.print("SCOPE LEVEL $scopeLevel:");
@@ -29,16 +34,21 @@ class Environment {
     if (_enclosing == null) {
       return Environment(values: {..._values}, initialized: {..._initialized});
     }
-    return Environment(values: {..._values}, initialized: {..._initialized}, enclosing: _enclosing!.clone());
+    return Environment(
+        values: {..._values},
+        initialized: {..._initialized},
+        enclosing: _enclosing!.clone());
   }
 
   dynamic get(Token identifier) {
     if (_enclosing == null && isInitialize(identifier) == false) {
-      throw RuntimeError(identifier, 'variable "${identifier.lexeme}" is not initialized.');
+      throw RuntimeError(
+          identifier, 'variable "${identifier.lexeme}" is not initialized.');
     }
     if (isInitialize(identifier)) return _values[identifier.lexeme];
     if (_enclosing != null) return _enclosing!.get(identifier);
-    throw RuntimeError(identifier, "Undefined variable '" + identifier.lexeme + "'.");
+    throw RuntimeError(
+        identifier, "Undefined variable '" + identifier.lexeme + "'.");
   }
 
   void define(Token identifier, dynamic value) {

@@ -80,7 +80,6 @@ class Lox {
   }
 }
 
-// FIX: Chưa đệ quy hết expression
 void main() {
-  Lox.run('if (true) print "Success!";');
+  Lox.run('''for (var i = 0; i <= 10; i = i + 2) print i;''');
 }
