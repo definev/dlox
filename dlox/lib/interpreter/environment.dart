@@ -61,7 +61,7 @@ class Environment {
   }
 
   void assign(Token name, Object value) {
-    if (_values.containsKey(name.lexeme)) {
+    if (_initialized.containsKey(name.lexeme)) {
       _values[name.lexeme] = value;
       _initialized[name.lexeme] = true;
       return;

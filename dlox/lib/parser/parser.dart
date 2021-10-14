@@ -126,7 +126,7 @@ class Parser {
       Expr thenExpr = _logicOr();
       _consume(TokenType.colon, 'Expect ":" for trinary operator.');
       Expr elseExpr = _logicOr();
-      expr = Expr.grouping(Expr.conditional(expr, thenExpr, elseExpr));
+      expr = Expr.conditional(expr, thenExpr, elseExpr);
     }
 
     return expr;
@@ -162,7 +162,7 @@ class Parser {
     while (_match([TokenType.bangEqual, TokenType.equalEqual])) {
       Token operator = _previous();
       Expr right = _comparison();
-      expr = Expr.grouping(Expr.binary(expr, operator, right));
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -179,7 +179,7 @@ class Parser {
     ])) {
       Token operator = _previous();
       Expr right = _term();
-      expr = Expr.grouping(Expr.binary(expr, operator, right));
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -191,7 +191,7 @@ class Parser {
     while (_match([TokenType.minus, TokenType.plus])) {
       Token operator = _previous();
       Expr right = _factor();
-      expr = Expr.grouping(Expr.binary(expr, operator, right));
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -203,7 +203,7 @@ class Parser {
     while (_match([TokenType.slash, TokenType.star])) {
       Token operator = _previous();
       Expr right = _unary();
-      expr = Expr.grouping(Expr.binary(expr, operator, right));
+      expr = Expr.binary(expr, operator, right);
     }
 
     return expr;
@@ -220,7 +220,7 @@ class Parser {
       Token operator = _previous();
       Expr right = _unary();
 
-      return Expr.grouping(Expr.unary(operator, right));
+      return Expr.unary(operator, right);
     }
 
     return _postfix();
@@ -231,7 +231,7 @@ class Parser {
 
     if (_match([TokenType.plusPlus, TokenType.minusMinus])) {
       Token operator = _previous();
-      expr = Expr.grouping(Expr.postfix(expr, operator));
+      expr = Expr.postfix(expr, operator);
     }
 
     return expr;

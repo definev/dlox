@@ -81,5 +81,5 @@ class Lox {
 }
 
 void main() {
-  Lox.run('''for (var i = 0; i <= 10; i = i + 2) print i;''');
+  Lox.runPrompt();
 }
