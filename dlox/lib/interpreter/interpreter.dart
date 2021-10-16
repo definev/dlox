@@ -16,13 +16,12 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   static Environment globals = Environment(values: {}, initialized: {});
 
-  Environment _environment = globals;
-  Environment get environment => _environment;
+  Environment environment = globals;
 
   Interpreter([this._native = Native]);
 
   void interpret(List<stmt_ast.Stmt> statements) {
-    _environment.define('clock', ClockFunction());
+    environment.define('clock', ClockFunction());
 
     try {
       for (stmt_ast.Stmt statement in statements) {
@@ -142,7 +141,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     switch (expr.operator.type) {
       case TokenType.plusPlus:
         if (expr.left is expr_ast.Variable) {
-          _environment.assign(
+          environment.assign(
             (expr.left as expr_ast.Variable).token,
             _evaluate(expr.left) + 1,
           );
@@ -150,7 +149,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
         return _evaluate(expr.left);
       case TokenType.minusMinus:
         if (expr.left is expr_ast.Variable) {
-          _environment.assign(
+          environment.assign(
             (expr.left as expr_ast.Variable).token,
             _evaluate(expr.left) - 1,
           );
@@ -164,13 +163,13 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   visitVariableExpr(expr_ast.Variable expr) {
-    return _environment.get(expr.token);
+    return environment.get(expr.token);
   }
 
   @override
   visitAssignmentExpr(expr_ast.Assignment expr) {
-    _environment.assign(expr.name, _evaluate(expr.value));
-    return _environment.get(expr.name);
+    environment.assign(expr.name, _evaluate(expr.value));
+    return environment.get(expr.name);
   }
 
   @override
@@ -274,12 +273,12 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   void executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
     try {
-      _environment = childScope.clone();
+      environment = childScope;
       for (final statement in statements) {
         _execute(statement);
       }
     } finally {
-      _environment = _environment.enclosing!.clone();
+      environment = environment.enclosing!.clone();
     }
   }
 
@@ -296,14 +295,14 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   @override
   void visitVarDeclStmt(stmt_ast.VarDecl stmt) {
     final value = _evaluate(stmt.initializer);
-    _environment.define(stmt.name.lexeme, value);
+    environment.define(stmt.name.lexeme, value);
   }
 
   @override
   void visitBlockStmt(stmt_ast.Block stmt) {
     executeBlock(
       stmt.statements,
-      Environment(values: {}, initialized: {}, enclosing: _environment.clone()),
+      Environment(values: {}, initialized: {}, enclosing: environment.clone()),
     );
   }
 
@@ -329,8 +328,8 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   void visitFunDeclStmt(stmt_ast.FunDecl stmt) {
-    final function = LoxFunction(stmt);
-    _environment.define(stmt.name.lexeme, function);
+    final function = LoxFunction(stmt, environment.clone());
+    environment.define(stmt.name.lexeme, function);
   }
 
   @override

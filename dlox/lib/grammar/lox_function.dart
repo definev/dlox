@@ -6,31 +6,37 @@ import 'package:dlox/interpreter/runtime_error.dart';
 
 class LoxFunction implements LoxCallable {
   final FunDecl _decl;
+  final Environment _closure;
 
-  LoxFunction(this._decl);
+  LoxFunction(this._decl, this._closure);
 
   @override
   int get arity => _decl.params.length;
 
   @override
   call(Interpreter interpreter, List arguments) {
-    Environment funcEnv = Environment(
+    Environment _globals = interpreter.environment.clone();
+    Environment funcScope = Environment(
       values: {},
       initialized: {},
-      enclosing: interpreter.environment.clone(),
+      enclosing: _closure.clone(),
     );
 
     for (int i = 0; i < _decl.params.length; i++) {
-      funcEnv.define(_decl.params[i].lexeme, arguments[i]);
+      funcScope.define(_decl.params[i].lexeme, arguments[i]);
     }
+
     try {
-      interpreter.executeBlock(_decl.body, funcEnv);
+      interpreter.executeBlock(_decl.body, funcScope);
     } on ReturnEvent catch (event) {
+      interpreter.environment = _globals;
       return event.value;
     } on BreakEvent catch (event) {
+      interpreter.environment = _globals;
       throw RuntimeError(event.keyword, 'Wrong use "break" in function.');
     }
 
+    interpreter.environment = _globals;
     return null;
   }
 

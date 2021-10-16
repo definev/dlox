@@ -82,13 +82,10 @@ class Lox {
 
 void main() {
   Lox.run('''
-  var index = 0;
-
-  while (true) {
-    index++;
-    print index;
-    if (index > 20) break;
+  fun scope(a) {
+    var a = "local";
   }
-  
+
+  scope("TEST");
   ''');
 }
