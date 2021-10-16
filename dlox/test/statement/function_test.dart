@@ -9,7 +9,8 @@ void main() {
     test('Normal function', () {
       final native = setUpFakePrint();
 
-      Lox.run('''
+      Lox.run(
+          '''
     fun helloWorld() {
       print "Hello world!!!";
     }
@@ -23,7 +24,8 @@ void main() {
     test('Parameters function', () {
       final native = setUpFakePrint();
 
-      Lox.run('''
+      Lox.run(
+          '''
     fun sayHi(me, you) {
       print "Sweet hello from " + me + " to " + you;
     }
@@ -37,7 +39,8 @@ void main() {
     test('Recursive function', () {
       final native = setUpFakePrint();
 
-      Lox.run('''
+      Lox.run(
+          '''
     fun fibo(n) {
       if (n <= 1) return 1;
       return fibo(n - 2) + fibo(n - 1);
@@ -47,6 +50,29 @@ void main() {
     ''');
 
       expect(native.output, equals('987\n'));
+    });
+
+    test('Closures function', () {
+      final native = setUpFakePrint();
+
+      Lox.run(
+          '''
+    fun counting(initValue) {
+      var index = initValue;
+      fun adding() {
+        index++;
+        print index;
+      }
+
+      return adding;
+    }
+
+    var counter = counting(0);
+    counter();
+    counter();
+    ''');
+
+      expect(native.output, equals('1\n1\n'));
     });
   });
 }

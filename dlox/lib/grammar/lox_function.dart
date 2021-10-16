@@ -19,7 +19,11 @@ class LoxFunction implements LoxCallable {
     Environment funcScope = Environment(
       values: {},
       initialized: {},
-      enclosing: _closure.clone(),
+      enclosing: Environment(
+        values: {_decl.name.lexeme: this},
+        initialized: {_decl.name.lexeme: true},
+        enclosing: _closure.clone(),
+      ),
     );
 
     for (int i = 0; i < _decl.params.length; i++) {

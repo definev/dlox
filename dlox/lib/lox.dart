@@ -81,11 +81,5 @@ class Lox {
 }
 
 void main() {
-  Lox.run('''
-  fun scope(a) {
-    var a = "local";
-  }
-
-  scope("TEST");
-  ''');
+  Lox.runPrompt();
 }
