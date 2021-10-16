@@ -36,15 +36,16 @@ print c;''');
     });
 
     // NOTE: CHAPTER 8: challenge 3
-    test('override variable', () {
+    test('Override variable', () {
       NativeCallScope _native = NativeCallScope();
       Lox.interpreter = Interpreter(_native);
 
       Lox.run('''var a = 1;
-{
-  var a = a + 2;
-  print a;
-}''');
+      {
+        var a = a + 2;
+        print a;
+      }
+      ''');
 
       expect(_native.output, equals('3\n'));
     });

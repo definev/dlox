@@ -1,20 +1,29 @@
-import 'package:dlox/ast/expr.dart' as expr_ast;
-import 'package:dlox/ast/stmt.dart' as stmt_ast;
+import 'package:dlox/grammar/lox_function.dart';
+import 'package:dlox/grammar/native_function/clock_function.dart';
+import 'package:dlox/grammar/expr.dart' as expr_ast;
+import 'package:dlox/grammar/lox_callable.dart';
+import 'package:dlox/grammar/stmt.dart' as stmt_ast;
 import 'package:dlox/interpreter/environment.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
-import 'package:dlox/native.dart';
+import 'package:dlox/_external/native.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
 class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   final NativeCall _native;
   NativeCall get native => _native;
-  Environment _environment = Environment(values: {}, initialized: {});
+
+  static Environment globals = Environment(values: {}, initialized: {});
+
+  Environment _environment = globals;
+  Environment get environment => _environment;
 
   Interpreter([this._native = Native]);
 
   void interpret(List<stmt_ast.Stmt> statements) {
+    _environment.define('clock', ClockFunction());
+
     try {
       for (stmt_ast.Stmt statement in statements) {
         _execute(statement);
@@ -183,6 +192,33 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     return null;
   }
 
+  @override
+  visitCallExpr(expr_ast.Call expr) {
+    final callee = _evaluate(expr.callee);
+
+    List<dynamic> arguments = [];
+
+    for (final argument in expr.arguments) {
+      arguments.add(_evaluate(argument));
+    }
+
+    if (callee is! LoxCallable) {
+      throw RuntimeError(expr.paren, 'Can only call functions and classes.');
+    }
+
+    if (callee.arity != arguments.length) {
+      throw RuntimeError(expr.paren,
+          'Expect ${callee.arity} arguments but receive ${arguments.length}.');
+    }
+
+    return callee.call(this, arguments);
+  }
+
+  @override
+  void visitBreakExprExpr(expr_ast.BreakExpr stmt) {
+    throw BreakEvent(stmt.keyword);
+  }
+
   bool _isTruthy(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
@@ -236,7 +272,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     return object.toString();
   }
 
-  void _executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
+  void executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
     try {
       _environment = childScope.clone();
       for (final statement in statements) {
@@ -258,14 +294,14 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   }
 
   @override
-  void visitVarStmtStmt(stmt_ast.VarStmt stmt) {
+  void visitVarDeclStmt(stmt_ast.VarDecl stmt) {
     final value = _evaluate(stmt.initializer);
-    _environment.define(stmt.name, value);
+    _environment.define(stmt.name.lexeme, value);
   }
 
   @override
   void visitBlockStmt(stmt_ast.Block stmt) {
-    _executeBlock(
+    executeBlock(
       stmt.statements,
       Environment(values: {}, initialized: {}, enclosing: _environment.clone()),
     );
@@ -283,7 +319,27 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   @override
   void visitWhileStmtStmt(stmt_ast.WhileStmt stmt) {
     while (_isTruthy(_evaluate(stmt.condition))) {
-      _execute(stmt.body);
+      try {
+        _execute(stmt.body);
+      } on BreakEvent catch (_) {
+        break;
+      }
     }
+  }
+
+  @override
+  void visitFunDeclStmt(stmt_ast.FunDecl stmt) {
+    final function = LoxFunction(stmt);
+    _environment.define(stmt.name.lexeme, function);
+  }
+
+  @override
+  void visitReturnStmtStmt(stmt_ast.ReturnStmt stmt) {
+    dynamic value;
+    if (stmt.value != null) {
+      value = _evaluate(stmt.value);
+    }
+
+    throw ReturnEvent(value);
   }
 }

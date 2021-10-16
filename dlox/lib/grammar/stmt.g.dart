@@ -11,12 +11,22 @@ abstract class Stmt {
   static Stmt exprStmt(Expr expression) => ExprStmt(
         expression,
       );
+  static Stmt returnStmt(Token keyword, Expr? value) => ReturnStmt(
+        keyword,
+        value,
+      );
   static Stmt printStmt(Expr expression) => PrintStmt(
         expression,
       );
-  static Stmt varStmt(Token name, Expr? initializer) => VarStmt(
+  static Stmt varDecl(Token name, Expr? initializer) => VarDecl(
         name,
         initializer,
+      );
+  static Stmt funDecl(Token name, List<Token> params, List<Stmt> body) =>
+      FunDecl(
+        name,
+        params,
+        body,
       );
   static Stmt ifStmt(Expr condition, Stmt thenBranch, Stmt? elseBranch) =>
       IfStmt(
@@ -35,8 +45,10 @@ abstract class Stmt {
 
 abstract class Visitor<R> {
   R visitExprStmtStmt(ExprStmt stmt);
+  R visitReturnStmtStmt(ReturnStmt stmt);
   R visitPrintStmtStmt(PrintStmt stmt);
-  R visitVarStmtStmt(VarStmt stmt);
+  R visitVarDeclStmt(VarDecl stmt);
+  R visitFunDeclStmt(FunDecl stmt);
   R visitIfStmtStmt(IfStmt stmt);
   R visitBlockStmt(Block stmt);
   R visitWhileStmtStmt(WhileStmt stmt);
@@ -57,6 +69,22 @@ class ExprStmt extends Stmt {
 }
 
 // no docs
+class ReturnStmt extends Stmt {
+  ReturnStmt(
+    this.keyword,
+    this.value,
+  );
+
+  final Token keyword;
+  final Expr? value;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitReturnStmtStmt(this);
+  }
+}
+
+// no docs
 class PrintStmt extends Stmt {
   PrintStmt(
     this.expression,
@@ -71,8 +99,8 @@ class PrintStmt extends Stmt {
 }
 
 // no docs
-class VarStmt extends Stmt {
-  VarStmt(
+class VarDecl extends Stmt {
+  VarDecl(
     this.name,
     this.initializer,
   );
@@ -82,7 +110,25 @@ class VarStmt extends Stmt {
 
   @override
   R accept<R>(Visitor<R> visitor) {
-    return visitor.visitVarStmtStmt(this);
+    return visitor.visitVarDeclStmt(this);
+  }
+}
+
+// no docs
+class FunDecl extends Stmt {
+  FunDecl(
+    this.name,
+    this.params,
+    this.body,
+  );
+
+  final Token name;
+  final List<Token> params;
+  final List<Stmt> body;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitFunDeclStmt(this);
   }
 }
 

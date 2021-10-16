@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dlox/ast/stmt.dart';
+import 'package:dlox/grammar/stmt.dart';
 import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/parser/parser.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
@@ -47,7 +47,7 @@ class Lox {
   }
 
   static void _report(int line, String where, String message, String from) {
-    stdout.writeln('|$from| [line: $line] Error $where: $message');
+    interpreter.native.print('|$from| [line: $line] Error $where: $message');
     hadError = true;
   }
 
@@ -81,5 +81,14 @@ class Lox {
 }
 
 void main() {
-  Lox.runPrompt();
+  Lox.run('''
+  var index = 0;
+
+  while (true) {
+    index++;
+    print index;
+    if (index > 20) break;
+  }
+  
+  ''');
 }

@@ -1,6 +1,6 @@
 // // INFO: Challenge chapter 4
 
-// import 'package:dlox/ast/expr.dart';
+// import 'package:dlox/grammar/expr.dart';
 // import 'package:dlox/token.dart';
 
 // class RpnPrinter implements Visitor<String> {

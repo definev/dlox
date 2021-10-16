@@ -45,6 +45,14 @@ abstract class Expr {
         operator,
         right,
       );
+  static Expr call(Expr callee, Token paren, List<Expr> arguments) => Call(
+        callee,
+        paren,
+        arguments,
+      );
+  static Expr breakExpr(Token keyword) => BreakExpr(
+        keyword,
+      );
 }
 
 abstract class Visitor<R> {
@@ -57,6 +65,8 @@ abstract class Visitor<R> {
   R visitVariableExpr(Variable expr);
   R visitAssignmentExpr(Assignment expr);
   R visitLogicalExpr(Logical expr);
+  R visitCallExpr(Call expr);
+  R visitBreakExprExpr(BreakExpr expr);
 }
 
 // Câu lệnh có hai vế
@@ -203,5 +213,37 @@ class Logical extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitLogicalExpr(this);
+  }
+}
+
+// no docs
+class Call extends Expr {
+  Call(
+    this.callee,
+    this.paren,
+    this.arguments,
+  );
+
+  final Expr callee;
+  final Token paren;
+  final List<Expr> arguments;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitCallExpr(this);
+  }
+}
+
+// no docs
+class BreakExpr extends Expr {
+  BreakExpr(
+    this.keyword,
+  );
+
+  final Token keyword;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitBreakExprExpr(this);
   }
 }

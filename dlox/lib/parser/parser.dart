@@ -1,5 +1,5 @@
-import 'package:dlox/ast/expr.dart';
-import 'package:dlox/ast/stmt.dart';
+import 'package:dlox/grammar/expr.dart';
+import 'package:dlox/grammar/stmt.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
@@ -87,19 +87,7 @@ class Parser {
     }
   }
 
-  Expr _expression() => _comma();
-
-  Expr _comma() {
-    Expr expr = _assignment();
-
-    if (_match([TokenType.comma])) {
-      Token operator = _previous();
-      Expr right = _assignment();
-      expr = Expr.binary(expr, operator, right);
-    }
-
-    return expr;
-  }
+  Expr _expression() => _assignment();
 
   Expr _assignment() {
     Expr expr = _conditional();
@@ -227,11 +215,54 @@ class Parser {
   }
 
   Expr _postfix() {
-    Expr expr = _primary();
+    Expr expr = _call();
 
     if (_match([TokenType.plusPlus, TokenType.minusMinus])) {
       Token operator = _previous();
       expr = Expr.postfix(expr, operator);
+    }
+
+    return expr;
+  }
+
+  Expr _finishCall(Expr callee) {
+    List<Expr> arguments = [];
+
+    if (!_checkType(TokenType.rightParen)) {
+      do {
+        if (arguments.length >= 255) {
+          _error(_peek(), "Can't have more than 255 arguments.");
+        }
+        arguments.add(_expression());
+      } while (_match([TokenType.comma]));
+    }
+
+    Token paren =
+        _consume(TokenType.rightParen, 'Missing ")" after arguments.');
+
+    return Expr.call(callee, paren, arguments);
+  }
+
+  Expr _call() {
+    Expr expr = _breakExpr();
+
+    while (true) {
+      if (_match([TokenType.leftParen])) {
+        expr = _finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  Expr _breakExpr() {
+    Expr expr;
+    if (_match([TokenType.kBreak])) {
+      expr = Expr.breakExpr(_previous());
+    } else {
+      expr = _primary();
     }
 
     return expr;
@@ -246,22 +277,22 @@ class Parser {
       return Expr.literal(_previous().literal);
     }
 
-    if (_match([TokenType.leftBrace])) {
+    if (_match([TokenType.leftParen])) {
       Expr expr = _expression();
-      _consume(TokenType.rightBrace, 'Missing ")" in group.');
+      _consume(TokenType.rightParen, 'Missing ")" in group.');
       return Grouping(expr);
     }
 
     if (_match([TokenType.identifier])) return Expr.variable(_previous());
 
-    throw ParserError(_peek(), 'Can\'t figure out what type is.');
+    throw _error(_peek(), 'Can\'t figure out what type is.');
   }
 
   Stmt _declaration() {
     try {
-      if (_match([TokenType.kVar])) {
-        return _varStmt();
-      }
+      if (_match([TokenType.kFun])) return _function('function');
+      if (_match([TokenType.kVar])) return _varDecl();
+
       return _statement();
     } on ParserError catch (_) {
       _synchronize();
@@ -269,33 +300,71 @@ class Parser {
     }
   }
 
+  Stmt _function(String kind) {
+    Token name = _consume(TokenType.identifier, 'Expect $kind name.');
+
+    _consume(TokenType.leftParen, 'Expect "(" after function name.');
+
+    List<Token> parameters = [];
+
+    while (_checkType(TokenType.identifier)) {
+      if (parameters.length >= 255) {
+        _error(_peek(), "Can't have more than 255 parameters.");
+        break;
+      }
+      parameters.add(_advance());
+      if (!_match([TokenType.comma])) {
+        break;
+      }
+    }
+
+    _consume(TokenType.rightParen, 'Expect ")" for end function parameters.');
+    _consume(TokenType.leftBrace, 'Expect "{" for block of code.');
+    List<Stmt> body = _block();
+
+    return Stmt.funDecl(name, parameters, body);
+  }
+
   List<Stmt> _block() {
     List<Stmt> stmts = [];
 
-    while (!_checkType(TokenType.rightParen) && !_isAtEnd) {
+    while (!_checkType(TokenType.rightBrace) && !_isAtEnd) {
       stmts.add(_declaration());
     }
 
-    _consume(TokenType.rightParen, 'Missing "}" at the end of block code.');
+    _consume(TokenType.rightBrace, 'Missing "}" at the end block of code.');
 
     return stmts;
   }
 
   Stmt _statement() {
-    if (_match([TokenType.kIf])) return _ifStmt();
-    if (_match([TokenType.kPrint])) return _printStmt();
+    if (_match([TokenType.kReturn])) return _returnStmt();
     if (_match([TokenType.kWhile])) return _whileStmt();
     if (_match([TokenType.kFor])) return _forStmt();
-    if (_match([TokenType.leftParen])) return Stmt.block(_block());
+    if (_match([TokenType.kIf])) return _ifStmt();
+    if (_match([TokenType.kPrint])) return _printStmt();
+    if (_match([TokenType.leftBrace])) return Stmt.block(_block());
 
     return _exprStmt();
   }
 
+  Stmt _returnStmt() {
+    Token keyword = _previous();
+    Expr? value;
+
+    if (!_checkType(TokenType.semicolon)) {
+      value = _expression();
+    }
+
+    _consume(TokenType.semicolon, 'Missing ";" after return.');
+    return Stmt.returnStmt(keyword, value);
+  }
+
   Stmt _forStmt() {
-    _consume(TokenType.leftBrace, 'Missing "(" after "for" loop.');
+    _consume(TokenType.leftParen, 'Missing "(" after "for" loop.');
     Stmt? initialized;
     if (_match([TokenType.kVar])) {
-      initialized = _varStmt();
+      initialized = _varDecl();
     } else if (!_match([TokenType.semicolon])) {
       initialized = _exprStmt();
     }
@@ -309,10 +378,10 @@ class Parser {
         TokenType.semicolon, 'Missing ";" after condition part "for" loop.');
 
     Expr? increment;
-    if (!_match([TokenType.rightBrace])) {
+    if (!_match([TokenType.rightParen])) {
       increment = _expression();
     }
-    _consume(TokenType.rightBrace, 'Missing ")" to end "for" loop.');
+    _consume(TokenType.rightParen, 'Missing ")" to end "for" loop.');
 
     Stmt body = _statement();
 
@@ -333,16 +402,16 @@ class Parser {
   }
 
   Stmt _whileStmt() {
-    _consume(TokenType.leftBrace,
+    _consume(TokenType.leftParen,
         'Missing "(" for declare condition for while loop.');
     Expr condition = _expression();
-    _consume(TokenType.rightBrace,
+    _consume(TokenType.rightParen,
         'Missing ")" for close declare condition for while loop.');
     Stmt body = _statement();
     return Stmt.whileStmt(condition, body);
   }
 
-  Stmt _varStmt() {
+  Stmt _varDecl() {
     Token name = _consume(TokenType.identifier, 'Expect variable name.');
 
     Expr? initializer;
@@ -351,7 +420,7 @@ class Parser {
       initializer = _expression();
     }
     _consume(TokenType.semicolon, 'Missing ";" after variable declaration.');
-    return Stmt.varStmt(name, initializer);
+    return Stmt.varDecl(name, initializer);
   }
 
   Stmt _printStmt() {
@@ -369,9 +438,9 @@ class Parser {
   }
 
   Stmt _ifStmt() {
-    _consume(TokenType.leftBrace, 'Missing "(" after if statement.');
+    _consume(TokenType.leftParen, 'Missing "(" after if statement.');
     Expr condition = _expression();
-    _consume(TokenType.rightBrace, 'Missing ")" to enclosing if statement.');
+    _consume(TokenType.rightParen, 'Missing ")" to enclosing if statement.');
     Stmt thenBranch = _statement();
     Stmt? elseBranch;
     if (_match([TokenType.kElse])) {

@@ -4,10 +4,10 @@ import 'package:dlox_annotations/dlox_annotations.dart';
 part 'token.g.dart';
 
 @TokenAnnotation(tokenMap: {
-  "{": "leftParen",
-  "}": "rightParen",
-  "(": "leftBrace",
-  ")": "rightBrace",
+  "(": "leftParen",
+  ")": "rightParen",
+  "{": "leftBrace",
+  "}": "rightBrace",
   ",": "comma",
   ".": "dot",
   "-": "minus",

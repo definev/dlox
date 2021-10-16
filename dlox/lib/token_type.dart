@@ -2,10 +2,10 @@
 
 enum TokenType {
   /// Token đơn kí tự
-  /* { */    leftParen,
-  /* } */    rightParen,
-  /* ( */    leftBrace,
-  /* ) */    rightBrace,
+  /* { */ leftBrace,
+  /* } */ rightBrace,
+  /* ( */ leftParen,
+  /* ) */ rightParen,
   /* , */    comma,
   /* . */    dot,
   /* - -- */ minus, minusMinus,
@@ -28,6 +28,7 @@ enum TokenType {
   /// Token từ khóa, prefix k = keyword
   kAnd, kClass, kElse, kFalse, kFun, kFor, kIf, kNil, 
   kOr, kPrint, kReturn, kSuper, kThis, kTrue, kVar, kWhile, 
-  
+  kBreak,
+
   eof,
 }

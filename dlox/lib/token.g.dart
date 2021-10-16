@@ -8,13 +8,13 @@ part of 'token.dart';
 
 class TokenParser {
   Token leftParen(int line) =>
-      Token(type: TokenType.leftParen, lexeme: '{', literal: null, line: line);
+      Token(type: TokenType.leftParen, lexeme: '(', literal: null, line: line);
   Token rightParen(int line) =>
-      Token(type: TokenType.rightParen, lexeme: '}', literal: null, line: line);
+      Token(type: TokenType.rightParen, lexeme: ')', literal: null, line: line);
   Token leftBrace(int line) =>
-      Token(type: TokenType.leftBrace, lexeme: '(', literal: null, line: line);
+      Token(type: TokenType.leftBrace, lexeme: '{', literal: null, line: line);
   Token rightBrace(int line) =>
-      Token(type: TokenType.rightBrace, lexeme: ')', literal: null, line: line);
+      Token(type: TokenType.rightBrace, lexeme: '}', literal: null, line: line);
   Token comma(int line) =>
       Token(type: TokenType.comma, lexeme: ',', literal: null, line: line);
   Token dot(int line) =>

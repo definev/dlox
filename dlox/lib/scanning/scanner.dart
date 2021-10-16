@@ -23,6 +23,7 @@ class Scanner {
     'true': TokenType.kTrue,
     'var': TokenType.kVar,
     'while': TokenType.kWhile,
+    'break': TokenType.kBreak,
   };
 
   int _start = 0;
@@ -44,7 +45,8 @@ class Scanner {
 
   void _addToken(TokenType type, Object? literal) {
     String lexeme = _source.substring(_start, _current);
-    _tokens.add(Token(type: type, lexeme: lexeme, literal: literal, line: _line));
+    _tokens
+        .add(Token(type: type, lexeme: lexeme, literal: literal, line: _line));
   }
 
   bool _match(String expected) {
@@ -74,7 +76,8 @@ class Scanner {
       _scanToken();
     }
 
-    _tokens.add(Token(type: TokenType.eof, lexeme: '', literal: null, line: _line));
+    _tokens.add(
+        Token(type: TokenType.eof, lexeme: '', literal: null, line: _line));
     return _tokens;
   }
 
@@ -83,16 +86,16 @@ class Scanner {
     String c = _advance();
     switch (c) {
       case '{':
-        addToken(TokenType.leftParen);
-        break;
-      case '}':
-        addToken(TokenType.rightParen);
-        break;
-      case '(':
         addToken(TokenType.leftBrace);
         break;
-      case ')':
+      case '}':
         addToken(TokenType.rightBrace);
+        break;
+      case '(':
+        addToken(TokenType.leftParen);
+        break;
+      case ')':
+        addToken(TokenType.rightParen);
         break;
       case ',':
         addToken(TokenType.comma);
@@ -215,6 +218,7 @@ class Scanner {
       }
     }
 
-    _addToken(TokenType.number, double.parse(_source.substring(_start, _current)));
+    _addToken(
+        TokenType.number, double.parse(_source.substring(_start, _current)));
   }
 }

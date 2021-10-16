@@ -14,6 +14,8 @@ part 'expr.g.dart';
   "Variable       : Token token",
   "Assignment     : Token name, Expr value",
   "Logical        : Expr left, Token operator, Expr right",
+  "Call           : Expr callee, Token paren, List<Expr> arguments",
+  "BreakExpr      : Token keyword",
 ])
 // ignore: unused_element
 class _Expr {}

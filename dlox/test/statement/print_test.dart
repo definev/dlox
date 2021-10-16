@@ -1,4 +1,3 @@
-import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/lox.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';

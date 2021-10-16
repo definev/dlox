@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:dlox/interpreter/runtime_error.dart';
-import 'package:dlox/native.dart';
+import 'package:dlox/_external/native.dart';
 import 'package:dlox/token.dart';
 
 class Environment {
@@ -51,13 +51,13 @@ class Environment {
         identifier, "Undefined variable '" + identifier.lexeme + "'.");
   }
 
-  void define(Token identifier, dynamic value) {
+  void define(String identifier, dynamic value) {
     if (value == null) {
-      _initialized[identifier.lexeme] = false;
+      _initialized[identifier] = false;
       return;
     }
-    _initialized[identifier.lexeme] = true;
-    _values[identifier.lexeme] = value;
+    _initialized[identifier] = true;
+    _values[identifier] = value;
   }
 
   void assign(Token name, Object value) {
