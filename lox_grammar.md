@@ -26,7 +26,9 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 // Toán tử một ngôi
 unary          → ( "!" | "-" | "--" | "+" | "++" ) unary
                | postfix ;
-postfix        → primary ("++" | "--")* ;
+postfix        → call ("++" | "--")* ;
+call           → primary ("(" arguments? ")")* ;
+arguments      → expression ( "," expression )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
@@ -36,16 +38,27 @@ Statement grammar
 program        → declaration* EOF ; 
 
 declaration    → varDecl
+               | funDecl
                | statement ;
 
+
+funDecl        → "fun" IDENTIFIER "(" parameters? ")" block ;
+parameters     → IDENTIFIER ("," IDENTIFIER)* ;
 
 varDecl        → "var" IDENTIFIER ("=" expression)? ";" ;
 
 statement      → exprStmt
-               | printStmt 
+               | forStmt
                | ifStmt
+               | printStmt 
+               | returnStmt
+               | breakStmt
                | whileStmt
                | block ;
+
+
+returnStmt     → "return" expression? ";"
+breakStmt      → "break" ";"
 
 exprStmt       → expression ";"
 

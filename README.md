@@ -22,15 +22,15 @@ Hiện tại tôi đang đọc cuốn `Crafting Interpreters` của Robert Nystr
   - [x] Challenge 2: Many languages define + such that if either operand is a string, the other is converted to a string and the results are then concatenated.
   - [x] Challenge 3: Change the implementation in visitBinary() to detect and report a runtime error when dividing by 0. 
 
-- [ ] 8. [**Statements and State**](http://www.craftinginterpreters.com/statements-and-state.html)
-  - [ ] Challenge 1: Add support to the REPL to let users type in both statements and expressions.
+- [x] 8. [**Statements and State**](http://www.craftinginterpreters.com/statements-and-state.html)
+  - [x] Challenge 1: Add support to the REPL to let users type in both statements and expressions.
   - [x] Challenge 2: Make it a runtime error to access a variable that has not been initialized or assigned to
   - Challenge 3: Nothing to implement.
 
-- [ ] 9. [**Control Flow**](http://www.craftinginterpreters.com/control-flow.html)
-  - [ ] Challenge 1: Nothing to implement.
-  - [ ] Challenge 2: Nothing to implement.
-  - [ ] Challenge 3: Add support for break statements.
+- [x] 9. [**Control Flow**](http://www.craftinginterpreters.com/control-flow.html)
+  - [x] Challenge 1: Nothing to implement.
+  - [x] Challenge 2: Nothing to implement.
+  - [x] Challenge 3: Add support for break statements.
 
 - [ ] 10. [**Functions**](http://www.craftinginterpreters.com/functions.html)
   - [ ] Challenge 1: Nothing to implement.
