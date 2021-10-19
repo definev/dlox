@@ -6,11 +6,13 @@ import '../fake/print_native_call.dart';
 
 void main() {
   group('Function', () {
-    test('Normal function', () {
-      final native = setUpFakePrint();
+    NativeCallScope native = setUpFakePrint();
+    setUp(() {
+      native = setUpFakePrint();
+    });
 
-      Lox.run(
-          '''
+    test('Normal function', () {
+      Lox.run('''
     fun helloWorld() {
       print "Hello world!!!";
     }
@@ -22,10 +24,7 @@ void main() {
     });
 
     test('Parameters function', () {
-      final native = setUpFakePrint();
-
-      Lox.run(
-          '''
+      Lox.run('''
     fun sayHi(me, you) {
       print "Sweet hello from " + me + " to " + you;
     }
@@ -37,10 +36,7 @@ void main() {
     });
 
     test('Recursive function', () {
-      final native = setUpFakePrint();
-
-      Lox.run(
-          '''
+      Lox.run('''
     fun fibo(n) {
       if (n <= 1) return 1;
       return fibo(n - 2) + fibo(n - 1);
@@ -53,10 +49,7 @@ void main() {
     });
 
     test('Closures function', () {
-      final native = setUpFakePrint();
-
-      Lox.run(
-          '''
+      Lox.run('''
     fun counting(initValue) {
       var index = initValue;
       fun adding() {
@@ -72,7 +65,16 @@ void main() {
     counter();
     ''');
 
-      expect(native.output, equals('1\n1\n'));
+      expect(native.output, equals('1\n2\n'));
+    });
+
+    test('Error when return at top-level code', () {
+      Lox.run('return "at the top-level code.";');
+      expect(
+        native.output,
+        equals(
+            '|resolver| [line: 1] Error : Can\'t return in top-level code.\n'),
+      );
     });
   });
 }

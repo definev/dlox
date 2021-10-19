@@ -1,49 +1,37 @@
-import 'dart:convert';
-
 import 'package:dlox/interpreter/runtime_error.dart';
-import 'package:dlox/_external/native.dart';
 import 'package:dlox/token.dart';
+
+class _Unidentified {
+  const _Unidentified();
+}
+
+const unidentified = _Unidentified();
 
 class Environment {
   final Environment? _enclosing;
   final Map<String, dynamic> _values;
-  final Map<String, bool> _initialized;
 
-  Environment(
-      {required Map<String, dynamic> values,
-      required Map<String, bool> initialized,
-      Environment? enclosing})
-      : _initialized = initialized,
-        _values = values,
+  Environment({required Map<String, dynamic> values, Environment? enclosing})
+      : _values = values,
         _enclosing = enclosing;
 
-  bool isInitialize(Token token) => _initialized[token.lexeme] ?? false;
+  bool isInitialize(Token token) =>
+      _values[token.lexeme] != unidentified &&
+      _values.keys.contains(token.lexeme) == true;
 
   Environment? get enclosing => _enclosing;
 
-  void print([int scopeLevel = 0]) {
-    Native.print("SCOPE LEVEL $scopeLevel:");
-    Native.print("VALUES: ${jsonEncode(_values)}");
-    Native.print("INITIALIZED: ${jsonEncode(_initialized)}");
-    if (_enclosing != null) {
-      _enclosing!.print(scopeLevel + 1);
-    }
-  }
-
   Environment clone() {
     if (_enclosing == null) {
-      return Environment(values: {..._values}, initialized: {..._initialized});
+      return Environment(values: {..._values});
     }
-    return Environment(
-        values: {..._values},
-        initialized: {..._initialized},
-        enclosing: _enclosing!.clone());
+    return Environment(values: {..._values}, enclosing: _enclosing!);
   }
 
   dynamic get(Token identifier) {
     if (_enclosing == null && isInitialize(identifier) == false) {
       throw RuntimeError(
-          identifier, 'variable "${identifier.lexeme}" is not initialized.');
+          identifier, 'Variable "${identifier.lexeme}" is not initialized.');
     }
     if (isInitialize(identifier)) return _values[identifier.lexeme];
     if (_enclosing != null) return _enclosing!.get(identifier);
@@ -51,19 +39,29 @@ class Environment {
         identifier, "Undefined variable '" + identifier.lexeme + "'.");
   }
 
-  void define(String identifier, dynamic value) {
-    if (value == null) {
-      _initialized[identifier] = false;
-      return;
-    }
-    _initialized[identifier] = true;
-    _values[identifier] = value;
+  dynamic getAt(int distance, String name) {
+    return _ancestor(distance)._values[name];
   }
 
-  void assign(Token name, Object value) {
-    if (_initialized.containsKey(name.lexeme)) {
+  Environment _ancestor(int distance) {
+    Environment ancestor = clone();
+    for (int i = 0; i < distance; i++) {
+      ancestor = ancestor._enclosing!;
+    }
+    return ancestor;
+  }
+
+  void define(String identifier, dynamic value) {
+    if (value == null) {
+      _values[identifier] = unidentified;
+    } else {
+      _values[identifier] = value;
+    }
+  }
+
+  void assign(Token name, dynamic value) {
+    if (_values.containsKey(name.lexeme)) {
       _values[name.lexeme] = value;
-      _initialized[name.lexeme] = true;
       return;
     }
 
@@ -73,5 +71,9 @@ class Environment {
     }
 
     throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+  }
+
+  void assignAt(int distance, Token name, dynamic value) {
+    _ancestor(distance).assign(name, value);
   }
 }

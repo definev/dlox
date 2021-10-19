@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:dlox/grammar/lox_function.dart';
 import 'package:dlox/grammar/native_function/clock_function.dart';
 import 'package:dlox/grammar/expr.dart' as expr_ast;
@@ -11,14 +13,15 @@ import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
 class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
+  Interpreter([this._native = Native]);
+
   final NativeCall _native;
   NativeCall get native => _native;
 
-  static Environment globals = Environment(values: {}, initialized: {});
+  static Environment globals = Environment(values: {});
 
   Environment environment = globals;
-
-  Interpreter([this._native = Native]);
+  HashMap<expr_ast.Expr, int> locals = HashMap();
 
   void interpret(List<stmt_ast.Stmt> statements) {
     environment.define('clock', ClockFunction());
@@ -34,6 +37,10 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   _execute(stmt_ast.Stmt statement) {
     statement.accept(this);
+  }
+
+  void resolve(expr_ast.Expr expr, int depth) {
+    locals[expr] = depth;
   }
 
   @override
@@ -74,7 +81,8 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
         if (left is String && right is String) {
           return left + right;
         }
-        if (left is String && right is num || left is num && right is String) {
+        if ((left is String && right is num) ||
+            (left is num && right is String)) {
           return '$left$right';
         }
         throw RuntimeError(
@@ -142,7 +150,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
       case TokenType.plusPlus:
         if (expr.left is expr_ast.Variable) {
           environment.assign(
-            (expr.left as expr_ast.Variable).token,
+            (expr.left as expr_ast.Variable).name,
             _evaluate(expr.left) + 1,
           );
         }
@@ -150,7 +158,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
       case TokenType.minusMinus:
         if (expr.left is expr_ast.Variable) {
           environment.assign(
-            (expr.left as expr_ast.Variable).token,
+            (expr.left as expr_ast.Variable).name,
             _evaluate(expr.left) - 1,
           );
         }
@@ -161,15 +169,31 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     }
   }
 
+  dynamic _lookUpVariable(Token name, expr_ast.Expr expr) {
+    int? distance = locals[expr];
+
+    if (distance != null) {
+      return environment.getAt(distance, name.lexeme);
+    } else {
+      return globals.get(name);
+    }
+  }
+
   @override
   visitVariableExpr(expr_ast.Variable expr) {
-    return environment.get(expr.token);
+    return _lookUpVariable(expr.name, expr);
   }
 
   @override
   visitAssignmentExpr(expr_ast.Assignment expr) {
-    environment.assign(expr.name, _evaluate(expr.value));
-    return environment.get(expr.name);
+    int? distance = locals[expr];
+    final value = _evaluate(expr.value);
+
+    if (distance != null) {
+      environment.assignAt(distance, expr.name, value);
+    } else {
+      globals.assign(expr.name, value);
+    }
   }
 
   @override
@@ -193,6 +217,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   visitCallExpr(expr_ast.Call expr) {
+    Environment outerEnvironment = environment;
     final callee = _evaluate(expr.callee);
 
     List<dynamic> arguments = [];
@@ -210,7 +235,9 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
           'Expect ${callee.arity} arguments but receive ${arguments.length}.');
     }
 
-    return callee.call(this, arguments);
+    final value = callee.call(this, arguments);
+    environment = outerEnvironment;
+    return value;
   }
 
   @override
@@ -252,7 +279,10 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   bool _checkBool(dynamic value) {
     if (value == null) {
-      throw RuntimeError(TokenParser().kIf(-1), 'Must be bool value.');
+      throw RuntimeError(
+        Token(type: TokenType.kIf, lexeme: 'if', literal: null, line: -1),
+        'Must be bool value.',
+      );
     }
     return true;
   }
@@ -272,13 +302,13 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   }
 
   void executeBlock(List<stmt_ast.Stmt> statements, Environment childScope) {
+    environment = childScope.clone();
     try {
-      environment = childScope;
       for (final statement in statements) {
         _execute(statement);
       }
     } finally {
-      environment = environment.enclosing!.clone();
+      environment = childScope.enclosing!;
     }
   }
 
@@ -302,7 +332,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   void visitBlockStmt(stmt_ast.Block stmt) {
     executeBlock(
       stmt.statements,
-      Environment(values: {}, initialized: {}, enclosing: environment.clone()),
+      Environment(values: {}, enclosing: environment),
     );
   }
 
@@ -328,7 +358,7 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   void visitFunDeclStmt(stmt_ast.FunDecl stmt) {
-    final function = LoxFunction(stmt, environment.clone());
+    final function = LoxFunction(stmt, environment);
     environment.define(stmt.name.lexeme, function);
   }
 

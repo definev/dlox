@@ -33,8 +33,8 @@ abstract class Expr {
         thenBranch,
         elseBranch,
       );
-  static Expr variable(Token token) => Variable(
-        token,
+  static Expr variable(Token name) => Variable(
+        name,
       );
   static Expr assignment(Token name, Expr value) => Assignment(
         name,
@@ -171,10 +171,10 @@ class Conditional extends Expr {
 // no docs
 class Variable extends Expr {
   Variable(
-    this.token,
+    this.name,
   );
 
-  final Token token;
+  final Token name;
 
   @override
   R accept<R>(Visitor<R> visitor) {

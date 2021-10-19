@@ -15,15 +15,9 @@ class LoxFunction implements LoxCallable {
 
   @override
   call(Interpreter interpreter, List arguments) {
-    Environment _globals = interpreter.environment.clone();
     Environment funcScope = Environment(
       values: {},
-      initialized: {},
-      enclosing: Environment(
-        values: {_decl.name.lexeme: this},
-        initialized: {_decl.name.lexeme: true},
-        enclosing: _closure.clone(),
-      ),
+      enclosing: _closure,
     );
 
     for (int i = 0; i < _decl.params.length; i++) {
@@ -33,14 +27,13 @@ class LoxFunction implements LoxCallable {
     try {
       interpreter.executeBlock(_decl.body, funcScope);
     } on ReturnEvent catch (event) {
-      interpreter.environment = _globals;
+      interpreter.environment =
+          interpreter.environment.enclosing ?? interpreter.environment;
       return event.value;
     } on BreakEvent catch (event) {
-      interpreter.environment = _globals;
       throw RuntimeError(event.keyword, 'Wrong use "break" in function.');
     }
 
-    interpreter.environment = _globals;
     return null;
   }
 

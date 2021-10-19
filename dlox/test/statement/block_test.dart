@@ -1,4 +1,3 @@
-import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/lox.dart';
 import 'package:test/test.dart';
 
@@ -6,28 +5,33 @@ import '../fake/print_native_call.dart';
 
 main() {
   group('Block statement', () {
-    test('Nested variable', () {
-      var native = setUpFakePrint();
+    NativeCallScope native = setUpFakePrint();
 
+    setUp(() {
+      native = setUpFakePrint();
+    });
+
+    test('Nested variable', () {
       Lox.run('''var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-  var a = "outer a";
-  var b = "outer b";
-  {
-    var a = "inner a";
-    print a;
-    print b;
-    print c;
-  }
-  print a;
-  print b;
-  print c;
-}
-print a;
-print b;
-print c;''');
+      var b = "global b";
+      var c = "global c";
+      {
+        var a = "outer a";
+        var b = "outer b";
+        {
+          var a = "inner a";
+          print a;
+          print b;
+          print c;
+        }
+        print a;
+        print b;
+        print c;
+      }
+      print a;
+      print b;
+      print c;
+    ''');
 
       expect(
           native.output,
@@ -37,9 +41,6 @@ print c;''');
 
     // NOTE: CHAPTER 8: challenge 3
     test('Override variable', () {
-      NativeCallScope _native = NativeCallScope();
-      Lox.interpreter = Interpreter(_native);
-
       Lox.run('''var a = 1;
       {
         var a = a + 2;
@@ -47,7 +48,32 @@ print c;''');
       }
       ''');
 
-      expect(_native.output, equals('3\n'));
+      expect(
+          native.output,
+          equals(
+              '|Resolver| [line: 3] Error : Variable "a" is not initialized yet.\n'));
+    });
+
+    test('Preceding variable', () {
+      Lox.run('var a = "Outer";{print a;var a = "Inner";}');
+
+      expect(native.output, equals('Outer\n'));
+    });
+
+    test('Error when override variable and call it-self', () {
+      Lox.run('''
+      var a = "inside.";
+      
+      {
+        var a = "Dead " + a;
+      }      
+      ''');
+
+      expect(
+        native.output,
+        equals(
+            '|Resolver| [line: 4] Error : Variable "a" is not initialized yet.\n'),
+      );
     });
   });
 }

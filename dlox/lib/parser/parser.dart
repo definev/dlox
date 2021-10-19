@@ -4,7 +4,6 @@ import 'package:dlox/lox.dart';
 import 'package:dlox/token.dart';
 import 'package:dlox/token_type.dart';
 
-// @{parser_grammar.md}
 class Parser {
   Parser(this._tokens);
   final List<Token> _tokens;
@@ -97,7 +96,7 @@ class Parser {
       Expr value = _assignment();
 
       if (expr is Variable) {
-        Token name = expr.token;
+        Token name = expr.name;
         return Expr.assignment(name, value);
       }
 

@@ -16,5 +16,7 @@ class NativeCallScope extends Fake implements NativeCall {
 NativeCallScope setUpFakePrint() {
   NativeCallScope native = NativeCallScope();
   Lox.interpreter = Interpreter(native);
+  Lox.hadError = false;
+  Lox.hadRuntimeError = false;
   return native;
 }

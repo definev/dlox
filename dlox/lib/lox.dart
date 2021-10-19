@@ -4,6 +4,7 @@ import 'package:dlox/grammar/stmt.dart';
 import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/parser/parser.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
+import 'package:dlox/resolver/resolver.dart';
 import 'package:dlox/scanning/scanner.dart';
 import 'package:dlox/token.dart';
 
@@ -33,9 +34,12 @@ class Lox {
     Parser parser = Parser(tokens);
     List<Stmt>? statements = parser.tryParse();
 
+    Resolver resolver = Resolver(interpreter);
+    resolver.resolves(statements!);
+
     if (hadError) return;
 
-    interpreter.interpret(statements!);
+    interpreter.interpret(statements);
   }
 
   static void parserError(Token token, String message) {

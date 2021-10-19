@@ -11,7 +11,7 @@ part 'expr.g.dart';
   "Unary          : Token operator, Expr right",
   "Postfix        : Expr left, Token operator",
   "Conditional    : Expr condition, Expr thenBranch, Expr elseBranch",
-  "Variable       : Token token",
+  "Variable       : Token name",
   "Assignment     : Token name, Expr value",
   "Logical        : Expr left, Token operator, Expr right",
   "Call           : Expr callee, Token paren, List<Expr> arguments",
