@@ -10,9 +10,10 @@ part 'stmt.g.dart';
   "PrintStmt      : Expr expression",
   "VarDecl        : Token name, Expr? initializer",
   "FunDecl        : Token name, List<Token> params, List<Stmt> body",
+  "ClassDecl      : Token name, List<FunDecl> methods",
   "IfStmt         : Expr condition, Stmt thenBranch, Stmt? elseBranch",
-  "Block          : List<Stmt> statements",
   "WhileStmt      : Expr condition, Stmt body",
+  "Block          : List<Stmt> statements",
 ])
 // ignore: unused_element
 class _Stmt {}

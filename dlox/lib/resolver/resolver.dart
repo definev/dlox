@@ -9,7 +9,9 @@ import '../grammar/stmt.dart' as stmt_ast;
 
 typedef Scope = Map<String, bool>;
 
-enum FunctionType { none, function }
+enum FunctionType { none, function, init, method }
+
+enum ClassType { none, kClass }
 
 class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
   Resolver(this.interpreter);
@@ -17,18 +19,7 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
   final Interpreter interpreter;
   List<Scope> _scopes = [];
   FunctionType _currentFunction = FunctionType.none;
-
-  @override
-  void visitAssignmentExpr(expr_ast.Assignment expr) {
-    _resolveExpr(expr.value);
-    _resolveLocal(expr, expr.name);
-  }
-
-  @override
-  void visitBinaryExpr(expr_ast.Binary expr) {
-    _resolveExpr(expr.left);
-    _resolveExpr(expr.right);
-  }
+  ClassType _currentClass = ClassType.none;
 
   void _beginScope() => _scopes.add({});
 
@@ -46,6 +37,52 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
     for (final statement in statments) {
       _resolveStmt(statement);
     }
+  }
+
+  void _declare(Token token) {
+    if (_scopes.isEmpty) return;
+    var scope = _scopes.last;
+    if (scope.containsKey(token.lexeme)) {
+      Lox.error(
+        token.line,
+        'Already define variable "${token.lexeme}" in this scope.',
+        'resolver',
+      );
+    }
+    scope[token.lexeme] = false;
+    _scopes.last = scope;
+  }
+
+  void _define(Token token) {
+    if (_scopes.isEmpty) return;
+    var scope = _scopes.last;
+    scope[token.lexeme] = true;
+    _scopes.last = scope;
+  }
+
+  void _resolveFunction(stmt_ast.FunDecl function, FunctionType type) {
+    FunctionType enclosingFunction = _currentFunction;
+    _currentFunction = type;
+    _beginScope();
+    for (Token param in function.params) {
+      _declare(param);
+      _define(param);
+    }
+    resolves(function.body);
+    _endScope();
+    _currentFunction = enclosingFunction;
+  }
+
+  @override
+  void visitAssignmentExpr(expr_ast.Assignment expr) {
+    _resolveExpr(expr.value);
+    _resolveLocal(expr, expr.name);
+  }
+
+  @override
+  void visitBinaryExpr(expr_ast.Binary expr) {
+    _resolveExpr(expr.left);
+    _resolveExpr(expr.right);
   }
 
   @override
@@ -77,19 +114,6 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
   @override
   void visitExprStmtStmt(stmt_ast.ExprStmt stmt) {
     _resolveExpr(stmt.expression);
-  }
-
-  void _resolveFunction(stmt_ast.FunDecl function, FunctionType type) {
-    FunctionType enclosingFunction = _currentFunction;
-    _currentFunction = type;
-    _beginScope();
-    for (Token param in function.params) {
-      _declare(param);
-      _define(param);
-    }
-    resolves(function.body);
-    _endScope();
-    _currentFunction = enclosingFunction;
   }
 
   @override
@@ -139,33 +163,22 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
         'resolver',
       );
     }
-    if (stmt.value != null) _resolveExpr(stmt.value!);
+
+    if (stmt.value != null) {
+      if (_currentFunction == FunctionType.init) {
+        Lox.error(
+          stmt.keyword.line,
+          'Can\'t return in init method.',
+          'resolver',
+        );
+      }
+      _resolveExpr(stmt.value!);
+    }
   }
 
   @override
   void visitUnaryExpr(expr_ast.Unary expr) {
     _resolveExpr(expr.right);
-  }
-
-  void _declare(Token token) {
-    if (_scopes.isEmpty) return;
-    var scope = _scopes.last;
-    if (scope.containsKey(token.lexeme)) {
-      Lox.error(
-        token.line,
-        'Already define variable "${token.lexeme}" in this scope.',
-        'resolver',
-      );
-    }
-    scope[token.lexeme] = false;
-    _scopes.last = scope;
-  }
-
-  void _define(Token token) {
-    if (_scopes.isEmpty) return;
-    var scope = _scopes.last;
-    scope[token.lexeme] = true;
-    _scopes.last = scope;
   }
 
   @override
@@ -200,8 +213,55 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
   }
 
   @override
+  void visitGetExpr(expr_ast.Get expr) {
+    _resolveExpr(expr.object);
+  }
+
+  @override
   void visitWhileStmtStmt(stmt_ast.WhileStmt stmt) {
     _resolveExpr(stmt.condition);
     _resolveStmt(stmt.body);
+  }
+
+  @override
+  void visitClassDeclStmt(stmt_ast.ClassDecl stmt) {
+    final _enclosingClass = _currentClass;
+    _currentClass = ClassType.kClass;
+    _declare(stmt.name);
+
+    _beginScope();
+    _scopes[_scopes.length - 1]["this"] = true;
+
+    for (final method in stmt.methods) {
+      FunctionType declaration = FunctionType.method;
+      if (method.name.lexeme == 'init') {
+        declaration = FunctionType.init;
+      }
+      _resolveFunction(method, declaration);
+    }
+
+    _define(stmt.name);
+    _endScope();
+
+    _currentClass = _enclosingClass;
+  }
+
+  @override
+  void visitSetExpr(expr_ast.Set expr) {
+    _resolveExpr(expr.value);
+    _resolveExpr(expr.object);
+  }
+
+  @override
+  void visitKThisExpr(expr_ast.KThis expr) {
+    if (_currentClass == ClassType.none) {
+      Lox.error(
+        expr.keyword.line,
+        'Cannot use "this" in outside class scope.',
+        'resolver',
+      );
+      return;
+    }
+    _resolveLocal(expr, expr.keyword);
   }
 }

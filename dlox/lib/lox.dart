@@ -85,5 +85,20 @@ class Lox {
 }
 
 void main() {
-  Lox.runPrompt();
+  // Lox.runPrompt();
+  Lox.run(
+      '''
+    class Vehicle {
+      init(name) {
+        this.name = "Roll Royces";
+      }
+
+      getName() {
+        return this.name;
+      }
+    }
+
+    var car = Vehicle("Roll Royces");
+    print car.getName();
+    ''');
 }

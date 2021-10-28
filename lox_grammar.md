@@ -1,13 +1,13 @@
 
 # Lox grammar rules
 Expression grammar
-```js
+```json
 // Biểu thức
 expression     → comma ;
 // Chia biểu thức qua dâu ","
 comma          → assignment ("," assignment)? ;
 // Đẳng thức
-assignment     → IDENTIFIER "=" assignment 
+assignment     → (call ".")? IDENTIFIER "=" assignment 
                | conditional ;
 // Toán tử ba ngôi
 conditional    → logic_or ( "?" logic_or ":" logic_or )? ;
@@ -27,22 +27,27 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" | "--" | "+" | "++" ) unary
                | postfix ;
 postfix        → call ("++" | "--")* ;
-call           → primary ("(" arguments? ")")* ;
+call           → primary ("(" arguments? ")" | "." IDENTIFIER)* ;
 arguments      → expression ( "," expression )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
 
 Statement grammar
-```js
+```json
 program        → declaration* EOF ; 
 
 declaration    → varDecl
                | funDecl
+               | classDecl
                | statement ;
 
+classDecl      → "class" IDENTIFIER "{" function* "}"    
 
-funDecl        → "fun" IDENTIFIER "(" parameters? ")" block ;
+funDecl        → "fun" function ;
+
+function       → IDENTIFIER "(" parameters? ")" block ;
+
 parameters     → IDENTIFIER ("," IDENTIFIER)* ;
 
 varDecl        → "var" IDENTIFIER ("=" expression)? ";" ;

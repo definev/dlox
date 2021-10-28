@@ -28,18 +28,22 @@ abstract class Stmt {
         params,
         body,
       );
+  static Stmt classDecl(Token name, List<FunDecl> methods) => ClassDecl(
+        name,
+        methods,
+      );
   static Stmt ifStmt(Expr condition, Stmt thenBranch, Stmt? elseBranch) =>
       IfStmt(
         condition,
         thenBranch,
         elseBranch,
       );
-  static Stmt block(List<Stmt> statements) => Block(
-        statements,
-      );
   static Stmt whileStmt(Expr condition, Stmt body) => WhileStmt(
         condition,
         body,
+      );
+  static Stmt block(List<Stmt> statements) => Block(
+        statements,
       );
 }
 
@@ -49,9 +53,10 @@ abstract class Visitor<R> {
   R visitPrintStmtStmt(PrintStmt stmt);
   R visitVarDeclStmt(VarDecl stmt);
   R visitFunDeclStmt(FunDecl stmt);
+  R visitClassDeclStmt(ClassDecl stmt);
   R visitIfStmtStmt(IfStmt stmt);
-  R visitBlockStmt(Block stmt);
   R visitWhileStmtStmt(WhileStmt stmt);
+  R visitBlockStmt(Block stmt);
 }
 
 // no docs
@@ -133,6 +138,22 @@ class FunDecl extends Stmt {
 }
 
 // no docs
+class ClassDecl extends Stmt {
+  ClassDecl(
+    this.name,
+    this.methods,
+  );
+
+  final Token name;
+  final List<FunDecl> methods;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitClassDeclStmt(this);
+  }
+}
+
+// no docs
 class IfStmt extends Stmt {
   IfStmt(
     this.condition,
@@ -151,20 +172,6 @@ class IfStmt extends Stmt {
 }
 
 // no docs
-class Block extends Stmt {
-  Block(
-    this.statements,
-  );
-
-  final List<Stmt> statements;
-
-  @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitBlockStmt(this);
-  }
-}
-
-// no docs
 class WhileStmt extends Stmt {
   WhileStmt(
     this.condition,
@@ -177,5 +184,19 @@ class WhileStmt extends Stmt {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitWhileStmtStmt(this);
+  }
+}
+
+// no docs
+class Block extends Stmt {
+  Block(
+    this.statements,
+  );
+
+  final List<Stmt> statements;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitBlockStmt(this);
   }
 }

@@ -50,6 +50,18 @@ abstract class Expr {
         paren,
         arguments,
       );
+  static Expr kThis(Token keyword) => KThis(
+        keyword,
+      );
+  static Expr get(Expr object, Token name) => Get(
+        object,
+        name,
+      );
+  static Expr set(Expr object, Token name, Expr value) => Set(
+        object,
+        name,
+        value,
+      );
   static Expr breakExpr(Token keyword) => BreakExpr(
         keyword,
       );
@@ -66,6 +78,9 @@ abstract class Visitor<R> {
   R visitAssignmentExpr(Assignment expr);
   R visitLogicalExpr(Logical expr);
   R visitCallExpr(Call expr);
+  R visitKThisExpr(KThis expr);
+  R visitGetExpr(Get expr);
+  R visitSetExpr(Set expr);
   R visitBreakExprExpr(BreakExpr expr);
 }
 
@@ -231,6 +246,54 @@ class Call extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitCallExpr(this);
+  }
+}
+
+// no docs
+class KThis extends Expr {
+  KThis(
+    this.keyword,
+  );
+
+  final Token keyword;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitKThisExpr(this);
+  }
+}
+
+// no docs
+class Get extends Expr {
+  Get(
+    this.object,
+    this.name,
+  );
+
+  final Expr object;
+  final Token name;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitGetExpr(this);
+  }
+}
+
+// no docs
+class Set extends Expr {
+  Set(
+    this.object,
+    this.name,
+    this.value,
+  );
+
+  final Expr object;
+  final Token name;
+  final Expr value;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitSetExpr(this);
   }
 }
 

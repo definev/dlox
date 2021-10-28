@@ -93,7 +93,7 @@ class Parser {
 
     if (_match([TokenType.equal])) {
       Token equals = _previous();
-      Expr value = _assignment();
+      Expr value = _conditional();
 
       if (expr is Variable) {
         Token name = expr.name;
@@ -101,6 +101,11 @@ class Parser {
       }
 
       _error(equals, "Invalid assignment target.");
+    } else if (expr is Get) {
+      if (_match([TokenType.equal])) {
+        Expr value = _conditional();
+        return Expr.set(expr.object, expr.name, value);
+      }
     }
 
     return expr;
@@ -248,6 +253,10 @@ class Parser {
     while (true) {
       if (_match([TokenType.leftParen])) {
         expr = _finishCall(expr);
+      } else if (_match([TokenType.dot])) {
+        Token name =
+            _consume(TokenType.identifier, 'Expect property after "." call');
+        expr = Expr.get(expr, name);
       } else {
         break;
       }
@@ -282,6 +291,10 @@ class Parser {
       return Grouping(expr);
     }
 
+    if (_match([TokenType.kThis])) {
+      return Expr.kThis(_previous());
+    }
+
     if (_match([TokenType.identifier])) return Expr.variable(_previous());
 
     throw _error(_peek(), 'Can\'t figure out what type is.');
@@ -291,12 +304,28 @@ class Parser {
     try {
       if (_match([TokenType.kFun])) return _function('function');
       if (_match([TokenType.kVar])) return _varDecl();
+      if (_match([TokenType.kClass])) return _classDecl();
 
       return _statement();
     } on ParserError catch (_) {
       _synchronize();
       rethrow;
     }
+  }
+
+  Stmt _classDecl() {
+    Token className = _consume(TokenType.identifier, 'Expect class name.');
+    _consume(
+        TokenType.leftBrace, 'Expect "{" after ${className.lexeme} class.');
+    List<FunDecl> methods = [];
+
+    while (!_checkType(TokenType.rightBrace) && !_isAtEnd) {
+      methods.add(_function('methods') as FunDecl);
+    }
+
+    _consume(TokenType.rightBrace, 'Expect "}" to close class.');
+
+    return Stmt.classDecl(className, methods);
   }
 
   Stmt _function(String kind) {

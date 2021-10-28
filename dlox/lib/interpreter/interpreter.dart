@@ -1,6 +1,8 @@
 import 'dart:collection';
 
+import 'package:dlox/grammar/lox_class.dart';
 import 'package:dlox/grammar/lox_function.dart';
+import 'package:dlox/grammar/lox_instance.dart';
 import 'package:dlox/grammar/native_function/clock_function.dart';
 import 'package:dlox/grammar/expr.dart' as expr_ast;
 import 'package:dlox/grammar/lox_callable.dart';
@@ -358,8 +360,25 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
   @override
   void visitFunDeclStmt(stmt_ast.FunDecl stmt) {
-    final function = LoxFunction(stmt, environment);
+    final function = LoxFunction(stmt, environment, false);
     environment.define(stmt.name.lexeme, function);
+  }
+
+  @override
+  void visitClassDeclStmt(stmt_ast.ClassDecl stmt) {
+    environment.define(stmt.name.lexeme, null);
+    Map<String, LoxFunction> _methods = {};
+    for (final method in stmt.methods) {
+      final function = LoxFunction(
+        method,
+        environment,
+        method.name.lexeme == 'init',
+      );
+      _methods[method.name.lexeme] = function;
+    }
+
+    LoxClass klass = LoxClass(stmt.name.lexeme, _methods);
+    environment.assign(stmt.name, klass);
   }
 
   @override
@@ -370,5 +389,34 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
     }
 
     throw ReturnEvent(value);
+  }
+
+  @override
+  visitGetExpr(expr_ast.Get expr) {
+    final object = _evaluate(expr.object);
+    if (object is LoxInstance) {
+      return object.get(expr.name);
+    }
+
+    throw RuntimeError(expr.name, 'Only instances have properties.');
+  }
+
+  @override
+  visitSetExpr(expr_ast.Set expr) {
+    final object = _evaluate(expr.object);
+    if (object is! LoxInstance) {
+      throw RuntimeError(expr.name,
+          'Cannot access field if "${expr.name.lexeme}" is not instance of class.');
+    }
+
+    final value = _evaluate(expr.value);
+
+    object.set(expr.name.lexeme, value);
+    return value;
+  }
+
+  @override
+  visitKThisExpr(expr_ast.KThis expr) {
+    return _lookUpVariable(expr.keyword, expr);
   }
 }
