@@ -19,6 +19,7 @@ part 'expr.g.dart';
   "Get         : Expr object, Token name",
   "Set         : Expr object, Token name, Expr value",
   "BreakExpr   : Token keyword",
+  "KSuper      : Token keyword, Token method",
 ])
 // ignore: unused_element
 class _Expr {}

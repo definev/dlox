@@ -28,9 +28,13 @@ abstract class Stmt {
         params,
         body,
       );
-  static Stmt classDecl(Token name, List<FunDecl> methods) => ClassDecl(
+  static Stmt classDecl(Token name, Variable? superclass, List<FunDecl> methods,
+          List<FunDecl> staticMethods) =>
+      ClassDecl(
         name,
+        superclass,
         methods,
+        staticMethods,
       );
   static Stmt ifStmt(Expr condition, Stmt thenBranch, Stmt? elseBranch) =>
       IfStmt(
@@ -141,11 +145,15 @@ class FunDecl extends Stmt {
 class ClassDecl extends Stmt {
   ClassDecl(
     this.name,
+    this.superclass,
     this.methods,
+    this.staticMethods,
   );
 
   final Token name;
+  final Variable? superclass;
   final List<FunDecl> methods;
+  final List<FunDecl> staticMethods;
 
   @override
   R accept<R>(Visitor<R> visitor) {

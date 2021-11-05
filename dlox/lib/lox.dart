@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:dlox/grammar/stmt.dart';
 import 'package:dlox/interpreter/interpreter.dart';
-import 'package:dlox/parser/parser.dart';
+import 'package:dlox/parser.dart';
 import 'package:dlox/interpreter/runtime_error.dart';
-import 'package:dlox/resolver/resolver.dart';
-import 'package:dlox/scanning/scanner.dart';
+import 'package:dlox/resolver.dart';
+import 'package:dlox/scanner.dart';
 import 'package:dlox/token.dart';
 
 import 'token_type.dart';
@@ -86,19 +86,26 @@ class Lox {
 
 void main() {
   // Lox.runPrompt();
-  Lox.run(
-      '''
-    class Vehicle {
-      init(name) {
-        this.name = "Roll Royces";
-      }
+  Lox.run('''
+class A {
+  method() {
+    print "A method";
+  }
+}
 
-      getName() {
-        return this.name;
-      }
-    }
+class B < A {
+  method() {
+    super.method();
+    print "B method";
+  }
 
-    var car = Vehicle("Roll Royces");
-    print car.getName();
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().method();
     ''');
 }

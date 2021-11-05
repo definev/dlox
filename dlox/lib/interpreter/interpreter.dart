@@ -367,6 +367,34 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
   @override
   void visitClassDeclStmt(stmt_ast.ClassDecl stmt) {
     environment.define(stmt.name.lexeme, null);
+    dynamic superclass;
+    if (stmt.superclass != null) {
+      superclass = _evaluate(stmt.superclass);
+      if (superclass is! LoxClass) {
+        throw RuntimeError(
+          stmt.superclass!.name,
+          'Superclass must be a class.',
+        );
+      }
+    }
+
+    Map<String, LoxFunction> _staticMethods = {};
+    for (final method in stmt.staticMethods) {
+      LoxFunction function = LoxFunction(method, environment, false);
+      _staticMethods[method.name.lexeme] = function;
+    }
+
+    if (stmt.superclass != null) {
+      environment = Environment(values: {}, enclosing: environment);
+      environment.define("super", superclass);
+    }
+
+    LoxClass metaclass = LoxClass(
+      null,
+      stmt.name.lexeme + " metaclass.",
+      _staticMethods,
+    );
+
     Map<String, LoxFunction> _methods = {};
     for (final method in stmt.methods) {
       final function = LoxFunction(
@@ -377,7 +405,13 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
       _methods[method.name.lexeme] = function;
     }
 
-    LoxClass klass = LoxClass(stmt.name.lexeme, _methods);
+    LoxClass klass =
+        LoxClass(metaclass, stmt.name.lexeme, _methods, superclass);
+
+    if (superclass != null) {
+      environment = environment.enclosing!;
+    }
+
     environment.assign(stmt.name, klass);
   }
 
@@ -413,6 +447,22 @@ class Interpreter implements expr_ast.Visitor<dynamic>, stmt_ast.Visitor<void> {
 
     object.set(expr.name.lexeme, value);
     return value;
+  }
+
+  @override
+  visitKSuperExpr(expr_ast.KSuper expr) {
+    int distance = locals[expr]!;
+    LoxClass superclass = environment.getAt(distance, 'super');
+    LoxInstance object = environment.getAt(distance - 1, 'this');
+
+    LoxFunction? method = superclass.findMethod(expr.method.lexeme);
+    if (method == null) {
+      throw RuntimeError(
+        expr.method,
+        'Undefined property "' + expr.method.lexeme + '".',
+      );
+    }
+    return method.bind(object);
   }
 
   @override

@@ -35,7 +35,8 @@ class Parser {
 
   bool _checkType(TokenType type) {
     if (_isAtEnd) return false;
-    return _peek().type == type;
+    final peek = _peek();
+    return peek.type == type;
   }
 
   Token _peek() => _tokens[_current];
@@ -297,6 +298,14 @@ class Parser {
 
     if (_match([TokenType.identifier])) return Expr.variable(_previous());
 
+    if (_match([TokenType.kSuper])) {
+      Token keyword = _previous();
+      _consume(TokenType.dot, 'Expect "." after "super".');
+      Token method =
+          _consume(TokenType.identifier, 'Expect superclass method name.');
+      return KSuper(keyword, method);
+    }
+
     throw _error(_peek(), 'Can\'t figure out what type is.');
   }
 
@@ -315,17 +324,24 @@ class Parser {
 
   Stmt _classDecl() {
     Token className = _consume(TokenType.identifier, 'Expect class name.');
+    Variable? superclass;
+    if (_match([TokenType.less])) {
+      _consume(TokenType.identifier, 'Expect superclass.');
+      superclass = Variable(_previous());
+    }
     _consume(
         TokenType.leftBrace, 'Expect "{" after ${className.lexeme} class.');
     List<FunDecl> methods = [];
+    List<FunDecl> staticMethods = [];
 
     while (!_checkType(TokenType.rightBrace) && !_isAtEnd) {
-      methods.add(_function('methods') as FunDecl);
+      final isStatic = _match([TokenType.kClass]);
+      (isStatic ? staticMethods : methods).add(_function('methods') as FunDecl);
     }
 
     _consume(TokenType.rightBrace, 'Expect "}" to close class.');
 
-    return Stmt.classDecl(className, methods);
+    return Stmt.classDecl(className, superclass, methods, staticMethods);
   }
 
   Stmt _function(String kind) {

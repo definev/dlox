@@ -8,7 +8,7 @@ import 'package:dlox/token.dart';
 class LoxInstance {
   LoxInstance(this._klass);
 
-  final LoxClass _klass;
+  final LoxClass? _klass;
   Map<String, dynamic> _fields = {};
 
   dynamic get(Token name) {
@@ -16,7 +16,7 @@ class LoxInstance {
       return _fields[name.lexeme];
     }
 
-    LoxFunction? method = _klass.findMethod(name.lexeme);
+    LoxFunction? method = _klass?.findMethod(name.lexeme);
     if (method != null) return method.bind(this);
 
     throw RuntimeError(name, 'Undefined property "${name.lexeme}".');

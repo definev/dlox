@@ -4,14 +4,14 @@ import 'package:dlox/interpreter/interpreter.dart';
 import 'package:dlox/lox.dart';
 import 'package:dlox/token.dart';
 
-import '../grammar/expr.dart' as expr_ast;
-import '../grammar/stmt.dart' as stmt_ast;
+import 'grammar/expr.dart' as expr_ast;
+import 'grammar/stmt.dart' as stmt_ast;
 
 typedef Scope = Map<String, bool>;
 
 enum FunctionType { none, function, init, method }
 
-enum ClassType { none, kClass }
+enum ClassType { none, kClass, subClass }
 
 class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
   Resolver(this.interpreter);
@@ -229,6 +229,25 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
     _currentClass = ClassType.kClass;
     _declare(stmt.name);
 
+    if (stmt.superclass != null &&
+        stmt.superclass!.name.lexeme == stmt.name.lexeme) {
+      Lox.error(
+        stmt.name.line,
+        'A class cannot inherit from itself.',
+        'resolver',
+      );
+    }
+
+    if (stmt.superclass != null) {
+      _currentClass = ClassType.subClass;
+      _resolveExpr(stmt.superclass!);
+    }
+
+    if (stmt.superclass != null) {
+      _beginScope();
+      _scopes[_scopes.length - 1]["super"] = true;
+    }
+
     _beginScope();
     _scopes[_scopes.length - 1]["this"] = true;
 
@@ -242,6 +261,16 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
 
     _define(stmt.name);
     _endScope();
+
+    if (stmt.superclass != null) _endScope();
+
+    for (final method in stmt.staticMethods) {
+      _beginScope();
+
+      _scopes[_scopes.length - 1]["this"] = true;
+      _resolveFunction(method, FunctionType.method);
+      _endScope();
+    }
 
     _currentClass = _enclosingClass;
   }
@@ -263,5 +292,23 @@ class Resolver implements expr_ast.Visitor<void>, stmt_ast.Visitor<void> {
       return;
     }
     _resolveLocal(expr, expr.keyword);
+  }
+
+  @override
+  void visitKSuperExpr(expr_ast.KSuper expr) {
+    _resolveLocal(expr, expr.keyword);
+    if (_currentClass == ClassType.none) {
+      Lox.error(
+        expr.keyword.line,
+        'Can\'t use "super" outside of a class.',
+        'resolve',
+      );
+    } else if (_currentClass != ClassType.subClass) {
+      Lox.error(
+        expr.keyword.line,
+        'Can\'t use "super" in a class with no superclass.',
+        'resolve',
+      );
+    }
   }
 }

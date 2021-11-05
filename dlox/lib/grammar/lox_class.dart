@@ -3,11 +3,13 @@ import 'package:dlox/grammar/lox_function.dart';
 import 'package:dlox/grammar/lox_instance.dart';
 import 'package:dlox/interpreter/interpreter.dart';
 
-class LoxClass implements LoxCallable {
+class LoxClass extends LoxInstance implements LoxCallable {
   final String name;
   final Map<String, LoxFunction> _methods;
+  final LoxClass? superclass;
 
-  LoxClass(this.name, this._methods);
+  LoxClass(LoxClass? metaclass, this.name, this._methods, [this.superclass])
+      : super(metaclass);
 
   @override
   String toString() => name;
@@ -19,16 +21,27 @@ class LoxClass implements LoxCallable {
     return 0;
   }
 
+  LoxFunction? findMethod(String name) {
+    if (_methods.containsKey(name)) {
+      return _methods[name]!;
+    }
+
+    if (superclass != null) {
+      return superclass!.findMethod(name);
+    }
+
+    return null;
+  }
+
   @override
   call(Interpreter interpreter, List arguments) {
     LoxInstance instance = LoxInstance(this);
 
-    _methods['init']?.bind(instance).call(interpreter, arguments);
+    LoxFunction? initializer = findMethod("init");
+    if (initializer != null) {
+      initializer.bind(instance).call(interpreter, arguments);
+    }
 
     return instance;
-  }
-
-  LoxFunction? findMethod(String name) {
-    return _methods[name];
   }
 }

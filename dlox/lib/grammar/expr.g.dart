@@ -65,6 +65,10 @@ abstract class Expr {
   static Expr breakExpr(Token keyword) => BreakExpr(
         keyword,
       );
+  static Expr kSuper(Token keyword, Token method) => KSuper(
+        keyword,
+        method,
+      );
 }
 
 abstract class Visitor<R> {
@@ -82,6 +86,7 @@ abstract class Visitor<R> {
   R visitGetExpr(Get expr);
   R visitSetExpr(Set expr);
   R visitBreakExprExpr(BreakExpr expr);
+  R visitKSuperExpr(KSuper expr);
 }
 
 // Câu lệnh có hai vế
@@ -308,5 +313,21 @@ class BreakExpr extends Expr {
   @override
   R accept<R>(Visitor<R> visitor) {
     return visitor.visitBreakExprExpr(this);
+  }
+}
+
+// no docs
+class KSuper extends Expr {
+  KSuper(
+    this.keyword,
+    this.method,
+  );
+
+  final Token keyword;
+  final Token method;
+
+  @override
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitKSuperExpr(this);
   }
 }
