@@ -88,8 +88,12 @@ void main() {
   // Lox.runPrompt();
   Lox.run('''
 class A {
+  init() {
+    this.hello = "Wehi";
+  }
+
   method() {
-    print "A method";
+    print this.hello + "A method";
   }
 }
 
@@ -106,6 +110,6 @@ class B < A {
 
 class C < B {}
 
-C().method();
+C().test();
     ''');
 }

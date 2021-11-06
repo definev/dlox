@@ -38,6 +38,7 @@ class LoxClass extends LoxInstance implements LoxCallable {
     LoxInstance instance = LoxInstance(this);
 
     LoxFunction? initializer = findMethod("init");
+    instance.set('this', this);
     if (initializer != null) {
       initializer.bind(instance).call(interpreter, arguments);
     }

@@ -99,8 +99,9 @@ class Parser {
       if (expr is Variable) {
         Token name = expr.name;
         return Expr.assignment(name, value);
+      } else if (expr is Get) {
+        return Expr.set(expr.object, expr.name, value);
       }
-
       _error(equals, "Invalid assignment target.");
     } else if (expr is Get) {
       if (_match([TokenType.equal])) {
