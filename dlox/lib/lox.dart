@@ -86,14 +86,14 @@ class Lox {
 
 void main() {
   // Lox.runPrompt();
-  Lox.run('''
+Lox.run('''
 class A {
   init() {
-    this.hello = "Wehi";
+    this.name = "A";
   }
 
   method() {
-    print this.hello + "A method";
+    print this.name + " method";
   }
 }
 

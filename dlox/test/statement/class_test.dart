@@ -58,4 +58,35 @@ void main() {
 
     expect(native.output, equals('9\n'));
   });
+  test('Inheritance', () {
+    final native = setUpFakePrint();
+    Lox.run('''
+class A {
+  init() {
+    this.name = "A";
+  }
+
+  method() {
+    print this.name + " method";
+  }
+}
+
+class B < A {
+  method() {
+    super.method();
+    print "B method";
+  }
+
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();
+    ''');
+
+    expect(native.output, equals('A method\n'));
+  });
 }
