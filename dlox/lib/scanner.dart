@@ -62,7 +62,7 @@ class Scanner {
   }
 
   String _peekNext() {
-    if (_source.length >= _current + 1) return '\x00';
+    if (_source.length <= _current + 1) return '\x00';
     return _source[_current + 1];
   }
 
@@ -210,7 +210,8 @@ class Scanner {
       _advance();
     }
 
-    if (_peek() == '.' && _isDigit(_peekNext())) {
+    final peek = _peek();
+    if (peek == '.' && _isDigit(_peekNext())) {
       _advance();
 
       while (_isDigit(_peek())) {

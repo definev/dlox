@@ -85,31 +85,16 @@ class Lox {
 }
 
 void main() {
-  // Lox.runPrompt();
-Lox.run('''
-class A {
-  init() {
-    this.name = "A";
-  }
-
-  method() {
-    print this.name + " method";
-  }
+  Lox.run('''
+  fun fib(n) {
+  if (n < 2) return n;
+  return fib(n - 1) + fib(n - 2);
 }
 
-class B < A {
-  method() {
-    super.method();
-    print "B method";
-  }
-
-  test() {
-    super.method();
-  }
-}
-
-class C < B {}
-
-C().test();
-    ''');
+var before = clock();
+print fib(25);
+var after = clock();
+var time = after - before;
+print "TOTAL CALULATE MS: " + time;
+''');
 }
